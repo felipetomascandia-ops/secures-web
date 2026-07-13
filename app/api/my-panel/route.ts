@@ -73,10 +73,10 @@ export async function GET(req: Request) {
     }
 
     // Filter related data by contract IDs
-    const contractIds = (contractData || []).map((c: any) => c.id)
-    const filteredSchedules = (allSchedules || []).filter((s: any) => contractIds.includes(s.contract_id))
-    const filteredCoverages = (allCoverages || []).filter((cov: any) => contractIds.includes(cov.contract_id))
-    const filteredCertificates = (allCertificates || []).filter((cert: any) => contractIds.includes(cert.contract_id))
+    const contractIds = (contractData || []).map((c: Record<string, unknown>) => c.id as string)
+    const filteredSchedules = (allSchedules || []).filter((s: Record<string, unknown>) => contractIds.includes(s.contract_id as string))
+    const filteredCoverages = (allCoverages || []).filter((cov: Record<string, unknown>) => contractIds.includes(cov.contract_id as string))
+    const filteredCertificates = (allCertificates || []).filter((cert: Record<string, unknown>) => contractIds.includes(cert.contract_id as string))
 
     return NextResponse.json({ 
       success: true, 

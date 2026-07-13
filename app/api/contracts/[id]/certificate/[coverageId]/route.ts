@@ -29,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     ] = await Promise.all([
       supabaseAdmin.from('contracts').select('*').eq('id', contractId).single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
       supabaseAdmin.from('coverages').select('*').eq('id', coverageId).single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
-      supabaseAdmin.from('vehicles').select('*').eq('contract_id', contractId).order('created_at', { ascending: true }) as unknown as Promise<{ data: any[] | null; error: unknown }>
+      supabaseAdmin.from('vehicles').select('*').eq('contract_id', contractId).order('created_at', { ascending: true }) as unknown as Promise<{ data: Record<string, unknown>[] | null; error: unknown }>
     ])
 
     if (contractError || !contract) {
@@ -43,7 +43,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     let html: string
     if ((coverage.insurance_type as string) === 'commercial-auto') {
       const vehiclesList = vehicles && vehicles.length > 0 ? vehicles : [{ year: '', make: '', model: '', vin: '' }]
-      const vehiclePages = vehiclesList.map((v: any, index: number) => `
+      const vehiclePages = vehiclesList.map((v: Record<string, unknown>, index: number) => `
         <div style="page-break-after: ${index < vehiclesList.length - 1 ? 'always' : 'avoid'};">
           <div class="document">
             <div class="header">
