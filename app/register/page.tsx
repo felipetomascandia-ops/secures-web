@@ -71,6 +71,8 @@ export default function RegisterPage() {
         setSuccess('Profile updated successfully!')
       } else {
         // Register new user with email/password
+        const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/profile`
+
         const { error: signUpError, data } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -79,7 +81,7 @@ export default function RegisterPage() {
               first_name: formData.firstName,
               last_name: formData.lastName,
             },
-            emailRedirectTo: `${window.location.origin}/profile`,
+            emailRedirectTo: redirectUrl,
           },
         })
 

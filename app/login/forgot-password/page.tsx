@@ -17,8 +17,10 @@ export default function ForgotPassword() {
     setMessage('')
     setError('')
 
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/login/update-password`
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login/update-password`, // This URL should be a page where the user can set a new password
+      redirectTo: redirectUrl,
     })
 
     if (error) {
