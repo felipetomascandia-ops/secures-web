@@ -266,7 +266,7 @@ export class ContractsService {
 
     const contractRec = contract as Record<string, unknown>
     const contractId = contractRec['id'] as string
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
     const documentUrl = `${baseUrl}/api/contracts/${contractId}/document`
     console.log('ContractsService: Updating contract with signed document URL', { contractId, documentUrl })
     const updateResult = await (db as unknown as any).from('contracts').update({

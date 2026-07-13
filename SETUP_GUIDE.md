@@ -55,8 +55,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 3. Name: `Olimpo Coverage Group Web`
 4. Authorized JavaScript origins:
    ```
-   http://localhost:3000
-   http://localhost:3001
+   https://www.olimpocoveragegroup.com
+   https://www.olimpocoveragegroup.com
    ```
 5. Authorized redirect URIs:
    ```
@@ -75,7 +75,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
 ### 4.1 Create Your Account
 1. Start the dev server: `npm run dev`
-2. Go to http://localhost:3000
+2. Go to https://www.olimpocoveragegroup.com
 3. Click "Sign Up"
 4. Register with your email or Google
 5. Verify your email if using email/password
@@ -91,7 +91,7 @@ VALUES ('YOUR_USER_ID');
 ```
 
 ### 4.3 Verify Admin Access
-1. Go to http://localhost:3000/admin/tickets
+1. Go to https://www.olimpocoveragegroup.com/admin/tickets
 2. You should see the admin panel!
 
 ## 5. Features Overview

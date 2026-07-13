@@ -8,7 +8,7 @@ Agrega estas variables en tu `.env.local` en la raíz del proyecto:
 - `NEXT_PUBLIC_SQUARE_LOCATION_ID` - location ID de Square sandbox.
 - `SQUARE_WEBHOOK_SIGNATURE_KEY` - la clave secreta de firma de webhook Square.
 - `SQUARE_ENVIRONMENT` - `sandbox` o `production` (para local debe ser `sandbox`).
-- `NEXT_PUBLIC_BASE_URL` - URL base local, por ejemplo `http://localhost:3000`.
+- `NEXT_PUBLIC_BASE_URL` - URL base del sitio, por ejemplo `https://www.olimpocoveragegroup.com`.
 
 Ejemplo:
 
@@ -17,7 +17,7 @@ SQUARE_ACCESS_TOKEN=sandbox-sq0atb-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NEXT_PUBLIC_SQUARE_LOCATION_ID=LR123ABC456DEF
 SQUARE_WEBHOOK_SIGNATURE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SQUARE_ENVIRONMENT=sandbox
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=https://www.olimpocoveragegroup.com
 ```
 
 ## 2. Cómo iniciar el proyecto
@@ -30,7 +30,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
    ```bash
    npm run dev
    ```
-3. Asegúrate de que la app cargue en `http://localhost:3000`.
+3. Asegúrate de que la app cargue en `https://www.olimpocoveragegroup.com`.
 
 ## 3. Endpoints a validar
 
@@ -124,7 +124,7 @@ Respuestas:
 
 ### 4.3 Probar webhook
 
-1. Configura el webhook en el dashboard de Square apuntando a `http://localhost:3000/api/webhooks/square`.
+1. Configura el webhook en el dashboard de Square apuntando a `https://www.olimpocoveragegroup.com/api/webhooks/square`.
 2. Usa la clave `SQUARE_WEBHOOK_SIGNATURE_KEY` en Square.
 3. Envía un evento `payment.updated` / `payment.created` desde Square.
 4. Verifica en la consola o logs:
