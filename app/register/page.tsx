@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSupabase } from '@/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
+import { getAuthRedirectUrl } from '@/lib/authRedirect'
 
 export default function RegisterPage() {
   const { signInWithGoogle, user } = useSupabase()
@@ -71,8 +72,6 @@ export default function RegisterPage() {
         setSuccess('Profile updated successfully!')
       } else {
         // Register new user with email/password
-        const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/profile`
-
         const { error: signUpError, data } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -81,7 +80,7 @@ export default function RegisterPage() {
               first_name: formData.firstName,
               last_name: formData.lastName,
             },
-            emailRedirectTo: redirectUrl,
+            emailRedirectTo: getAuthRedirectUrl('/profile'),
           },
         })
 

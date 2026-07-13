@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getAuthRedirectUrl } from '@/lib/authRedirect'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface SupabaseContextType {
@@ -41,12 +42,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/profile`
-
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
+        redirectTo: getAuthRedirectUrl('/profile'),
       },
     })
   }

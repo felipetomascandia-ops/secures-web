@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase' // Assuming this is the correct path to your supabase client
+import { supabase } from '@/lib/supabase'
+import { getAuthRedirectUrl } from '@/lib/authRedirect'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -17,10 +18,8 @@ export default function ForgotPassword() {
     setMessage('')
     setError('')
 
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/login/update-password`
-
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
+      redirectTo: getAuthRedirectUrl('/login/update-password'),
     })
 
     if (error) {
