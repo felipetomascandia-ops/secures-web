@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import supabaseAdmin from '@/lib/supabaseAdmin'
+import type { Database } from '@/types/supabase'
 
 export const runtime = 'nodejs'
 
@@ -19,14 +20,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, message: 'Contract not found' }, { status: 404 })
     }
 
+    const updatePayload: Database['public']['Tables']['contracts']['Update'] = {
+      client_signature: signature,
+      client_signature_date: signatureDate,
+      is_signed: true,
+    }
+
+    type ContractUpdateBuilder = {
+      update: (values: Database['public']['Tables']['contracts']['Update']) => {
+        eq: (column: string, value: string) => {
+          select: () => {
+            single: () => Promise<{ data: unknown; error: { message?: string } | null }>
+          }
+        }
+      }
+    }
+
+    const supabaseClient = supabaseAdmin as unknown as {
+      from: (table: 'contracts') => ContractUpdateBuilder
+    }
+
     // Update contract
-    const { data: updatedContract, error: updateError } = await supabaseAdmin
+    const { data: updatedContract, error: updateError } = await supabaseClient
       .from('contracts')
-      .update({
-        client_signature: signature,
-        client_signature_date: signatureDate,
-        is_signed: true,
-      })
+      .update(updatePayload)
       .eq('id', contractId)
       .select()
       .single()
