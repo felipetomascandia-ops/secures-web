@@ -1732,7 +1732,7 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
     };
 
     let typeText = '';
-    let limitsRows: JSX.Element[] = [];
+    let limitsRows: string[][] = [];
 
     if (coverage.insuranceType === 'general-liability') {
       typeText = 'X  COMMERCIAL GENERAL LIABILITY';
