@@ -21,6 +21,23 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    const handleCallbackRedirect = () => {
+      const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
+      const isLocalCallback = currentUrl.includes('localhost') || currentUrl.includes('127.0.0.1')
+      const hasAuthHash = currentUrl.includes('access_token') || currentUrl.includes('error=') || currentUrl.includes('code=')
+
+      if (isLocalCallback && hasAuthHash) {
+        window.location.replace(getAuthRedirectUrl('/profile'))
+        return true
+      }
+
+      return false
+    }
+
+    if (handleCallbackRedirect()) {
+      return
+    }
+
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
