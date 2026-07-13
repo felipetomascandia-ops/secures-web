@@ -1725,7 +1725,7 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
   }
 
   const Acord25Certificate = ({ coverage, index }: { coverage: Coverage; index: number }) => {
-    const formatCurrencyOrEmpty = (val: unknown): string => {
+    const formatCurrencyOrEmpty = (val: string | number | null | undefined): string => {
       const num = parseCurrencyValue(val);
       if (num == null) return '';
       return `$${num.toLocaleString('en-US')}`;
