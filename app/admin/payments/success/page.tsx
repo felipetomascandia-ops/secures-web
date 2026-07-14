@@ -34,7 +34,11 @@ export default function PaymentSuccessPage() {
       params.get('checkout_id') ||
       params.get('payment_link_id') ||
       params.get('paymentLinkId') ||
-      params.get('checkout_id')
+      params.get('transactionId') ||
+      params.get('transaction_id') ||
+      params.get('orderId') ||
+      params.get('order_id') ||
+      null
 
     const query = paymentId
       ? `paymentId=${encodeURIComponent(paymentId)}`
