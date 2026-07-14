@@ -34,7 +34,7 @@ export async function GET(req: Request) {
       .from('payments')
       .select('*')
       .or(`square_checkout_id.eq.${search},checkout_id.eq.${search}`)
-      .single() as Promise<{ data: Record<string, unknown> | null; error: unknown }>
+      .single<Record<string, unknown>>()
 
     if (!paymentQuery.error && paymentQuery.data) {
       return NextResponse.json({ success: true, payment: paymentQuery.data })
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       .from('payment_schedules')
       .select('*')
       .eq('checkout_id', search)
-      .single() as Promise<{ data: Record<string, unknown> | null; error: unknown }>
+      .single<Record<string, unknown>>()
 
     if (!scheduleQuery.error && scheduleQuery.data) {
       const schedule = scheduleQuery.data as Record<string, unknown>
@@ -73,10 +73,10 @@ export async function GET(req: Request) {
       .from('square_payments')
       .select('*')
       .or(`square_checkout_id.eq.${search},square_payment_id.eq.${search}`)
-      .single()
+      .single<Record<string, unknown>>()
 
     if (!squarePaymentQuery.error && squarePaymentQuery.data) {
-      const squarePayment = squarePaymentQuery.data as Record<string, unknown>
+      const squarePayment = squarePaymentQuery.data
       return NextResponse.json({
         success: true,
         payment: {
