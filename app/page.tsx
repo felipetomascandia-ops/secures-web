@@ -279,6 +279,17 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const transactionId = params.get('transactionId')
+    const orderId = params.get('orderId')
+    const checkoutId = orderId || transactionId
+
+    if (checkoutId) {
+      window.location.replace(`/admin/payments/success?checkoutId=${encodeURIComponent(checkoutId)}`)
+    }
+  }, [])
+
+  useEffect(() => {
     const targetRef = navRefs[activeSection as keyof typeof navRefs]
     const updatePosition = () => {
       if (targetRef.current) {
