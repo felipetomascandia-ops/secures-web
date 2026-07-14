@@ -1090,141 +1090,110 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
     `
   }
 
+  const getCoverageLimitsFields = (type: string): { key: keyof Coverage; label: string }[] => {
+    const common: { key: keyof Coverage; label: string }[] = [
+      { key: 'deductible', label: 'Deductible' },
+    ]
+    const personalTypes = ['personal-auto', 'motorcycle', 'bicycle', 'pet', 'mobile-device', 'event']
+    
+    if (type === 'general-liability') {
+      return [
+        { key: 'eachOccurrence', label: 'Each Occurrence' },
+        { key: 'damageToRentedPremises', label: 'Damage to Rented Premises' },
+        { key: 'medExp', label: 'Med Exp (Any one person)' },
+        { key: 'personalAdvInjury', label: 'Personal & Adv Injury' },
+        { key: 'generalAggregate', label: 'General Aggregate' },
+        { key: 'productsCompletedOpsAgg', label: 'Products - Comp/Op Agg' },
+        { key: 'combinedSingleLimit', label: 'Combined Single Limit' },
+        { key: 'bodilyInjuryPerPerson', label: 'Bodily Injury (Per person)' },
+        { key: 'bodilyInjuryPerAccident', label: 'Bodily Injury (Per accident)' },
+        { key: 'propertyDamagePerAccident', label: 'Property Damage (Per accident)' },
+        { key: 'elEachAccident', label: 'E.L. Each Accident' },
+        { key: 'elDiseaseEaEmployee', label: 'E.L. Disease - Ea Employee' },
+        { key: 'elDiseasePolicyLimit', label: 'E.L. Disease - Policy Limit' },
+        { key: 'deductible', label: 'Deductible' },
+      ]
+    }
+    if (type === 'commercial-auto') {
+      return [
+        { key: 'autoAnyAuto', label: 'Any Auto' },
+        { key: 'autoOwnedAuto', label: 'Owned Autos' },
+        { key: 'autoHiredAutosOnly', label: 'Hired Autos Only' },
+        { key: 'autoNonOwnedAutosOnly', label: 'Non-Owned Autos Only' },
+        { key: 'autoScheduledAutos', label: 'Scheduled Autos' },
+        { key: 'bodilyInjuryPerPerson', label: 'Bodily Injury (Per person)' },
+        { key: 'bodilyInjuryPerAccident', label: 'Bodily Injury (Per accident)' },
+        { key: 'propertyDamagePerAccident', label: 'Property Damage (Per accident)' },
+        { key: 'combinedSingleLimit', label: 'Combined Single Limit' },
+        { key: 'deductible', label: 'Deductible' },
+      ]
+    }
+    if (type === 'commercial-property' || type === 'homeowners' || type === 'mobile-home' || type === 'condo') {
+      return [
+        { key: 'propertyBuildingLimit', label: 'Building/Property Limit' },
+        { key: 'propertyPersonalPropertyLimit', label: 'Personal Property Limit' },
+        { key: 'deductible', label: 'Deductible' },
+        { key: 'annualLimit', label: 'Annual Limit' },
+        { key: 'liabilityLimit', label: 'Liability Limit' },
+      ]
+    }
+    if (type === 'renters') {
+      return [
+        { key: 'propertyPersonalPropertyLimit', label: 'Personal Property Limit' },
+        { key: 'liabilityLimit', label: 'Liability Limit' },
+        { key: 'deductible', label: 'Deductible' },
+        { key: 'annualLimit', label: 'Annual Limit' },
+      ]
+    }
+    if (type === 'business-insurance' || type === 'professional-liability') {
+      return [
+        { key: 'eachOccurrence', label: 'Each Occurrence' },
+        { key: 'generalAggregate', label: 'General Aggregate' },
+        { key: 'deductible', label: 'Deductible' },
+        { key: 'annualLimit', label: 'Annual Limit' },
+        { key: 'liabilityLimit', label: 'Liability Limit' },
+      ]
+    }
+    if (type === 'workers-comp') {
+      return [
+        { key: 'elEachAccident', label: 'E.L. Each Accident' },
+        { key: 'elDiseaseEaEmployee', label: 'E.L. Disease - Ea Employee' },
+        { key: 'elDiseasePolicyLimit', label: 'E.L. Disease - Policy Limit' },
+        { key: 'deductible', label: 'Deductible' },
+      ]
+    }
+    if (personalTypes.includes(type)) {
+      return [
+        { key: 'annualLimit', label: 'Annual Limit' },
+        { key: 'perIncidentLimit', label: 'Per Incident Limit' },
+        { key: 'coverageLimit', label: 'Coverage Limit' },
+        { key: 'deductible', label: 'Deductible' },
+      ]
+    }
+    return common
+  }
+
   const renderCoverageLimitsPreview = (coverage: Coverage) => {
-    if (coverage.insuranceType === 'general-liability') {
-      return (
-        <div key={coverage.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <div className="text-sm font-semibold text-slate-900 mb-4">{getInsuranceTypeLabel(coverage.insuranceType)} Limits</div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Each Occurrence</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.eachOccurrence))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">General Aggregate</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.generalAggregate))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Damage to Rented Premises</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.damageToRentedPremises))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Med Exp (Any one person)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.medExp))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Personal & Adv Injury</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.personalAdvInjury))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Products - Comp/Op Agg</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.productsCompletedOpsAgg))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Combined Single Limit</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.combinedSingleLimit))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Bodily Injury (Per person)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerPerson))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Bodily Injury (Per accident)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerAccident))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Property Damage (Per accident)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.propertyDamagePerAccident))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">E.L. Each Accident</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.elEachAccident))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">E.L. Disease - Ea Employee</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.elDiseaseEaEmployee))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">E.L. Disease - Policy Limit</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.elDiseasePolicyLimit))}</div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (coverage.insuranceType === 'commercial-auto') {
-      return (
-        <div key={coverage.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <div className="text-sm font-semibold text-slate-900 mb-4">{getInsuranceTypeLabel(coverage.insuranceType)} Limits</div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Any Auto</div>
-              <div>{coverage.autoAnyAuto || 'N/A'}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Owned Autos</div>
-              <div>{coverage.autoOwnedAuto || 'N/A'}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Hired Autos Only</div>
-              <div>{coverage.autoHiredAutosOnly || 'N/A'}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Non-Owned Autos Only</div>
-              <div>{coverage.autoNonOwnedAutosOnly || 'N/A'}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Scheduled Autos</div>
-              <div>{coverage.autoScheduledAutos || 'N/A'}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Bodily Injury (Per person)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerPerson))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Bodily Injury (Per accident)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerAccident))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Property Damage (Per accident)</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.propertyDamagePerAccident))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Combined Single Limit</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.combinedSingleLimit))}</div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (coverage.insuranceType === 'commercial-property') {
-      return (
-        <div key={coverage.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-          <div className="text-sm font-semibold text-slate-900 mb-4">{getInsuranceTypeLabel(coverage.insuranceType)} Limits</div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Building Limit</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.propertyBuildingLimit))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Business Personal Property</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.propertyPersonalPropertyLimit))}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900 mb-2">Deductible</div>
-              <div>{formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}</div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
+    const fields = getCoverageLimitsFields(coverage.insuranceType)
+    
     return (
       <div key={coverage.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
         <div className="text-sm font-semibold text-slate-900 mb-4">{getInsuranceTypeLabel(coverage.insuranceType)} Limits</div>
-        <p className="text-sm text-slate-700">{coverage.deductible ? `Deductible: ${formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}` : 'No specific limits entered.'}</p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {fields.map((field) => {
+            const val = coverage[field.key]
+            if (!val) return null
+            return (
+              <div key={field.key} className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                <div className="font-semibold text-slate-900 mb-2">{field.label}</div>
+                <div>{formatCurrencyDisplay(parseCurrencyValue(val))}</div>
+              </div>
+            )
+          })}
+          {fields.every(f => !coverage[f.key]) && (
+            <p className="text-sm text-slate-500 col-span-2">No specific limits entered.</p>
+          )}
+        </div>
       </div>
     )
   }
