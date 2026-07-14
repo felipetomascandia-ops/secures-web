@@ -329,10 +329,10 @@ export default function Home() {
             src="/images/fondo1.png"
             alt="Background"
             fill
-            className="object-cover opacity-30"
+            className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/60" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
