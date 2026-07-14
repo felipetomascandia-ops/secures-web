@@ -47,24 +47,24 @@ export async function GET(req: Request) {
       .single()
 
     if (!scheduleQuery.error && scheduleQuery.data) {
-      const schedule: any = scheduleQuery.data
+      const schedule = scheduleQuery.data as Record<string, unknown>
       return NextResponse.json({
         success: true,
         payment: {
-          id: schedule.id,
-          square_checkout_id: schedule.checkout_id,
-          square_url: schedule.checkout_url,
+          id: schedule.id as string,
+          square_checkout_id: schedule.checkout_id as string | null,
+          square_url: schedule.checkout_url as string | null,
           amount: Number(schedule.amount) || 0,
           currency: 'USD',
-          status: schedule.status || 'pending',
+          status: (schedule.status as string) || 'pending',
           customer: 'Scheduled payment',
           email: '',
           phone: null,
           description: null,
-          contract_id: schedule.contract_id,
+          contract_id: schedule.contract_id as string | null,
           created_by: null,
-          expires_at: schedule.due_date || null,
-          created_at: schedule.created_at || '',
+          expires_at: schedule.due_date as string | null,
+          created_at: (schedule.created_at as string) || '',
         },
       })
     }
@@ -76,16 +76,16 @@ export async function GET(req: Request) {
       .single()
 
     if (!squarePaymentQuery.error && squarePaymentQuery.data) {
-      const squarePayment: any = squarePaymentQuery.data
+      const squarePayment = squarePaymentQuery.data as Record<string, unknown>
       return NextResponse.json({
         success: true,
         payment: {
-          id: squarePayment.id,
-          square_checkout_id: squarePayment.square_checkout_id,
+          id: squarePayment.id as string,
+          square_checkout_id: squarePayment.square_checkout_id as string | null,
           square_url: null,
           amount: Number(squarePayment.amount) || 0,
-          currency: squarePayment.currency || 'USD',
-          status: squarePayment.status || 'unknown',
+          currency: (squarePayment.currency as string) || 'USD',
+          status: (squarePayment.status as string) || 'unknown',
           customer: 'Square payment',
           email: '',
           phone: null,
@@ -93,7 +93,7 @@ export async function GET(req: Request) {
           contract_id: null,
           created_by: null,
           expires_at: null,
-          created_at: squarePayment.created_at || '',
+          created_at: (squarePayment.created_at as string) || '',
         },
       })
     }
