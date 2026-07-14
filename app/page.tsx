@@ -326,7 +326,7 @@ export default function Home() {
       <section id="home" className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/fondo1.png"
+            src="/images/fondo1.png?v=2"
             alt="Background"
             fill
             className="object-cover object-center"
