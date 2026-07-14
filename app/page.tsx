@@ -7,7 +7,6 @@ import { useSupabase } from "@/providers/SupabaseProvider";
 import { TicketWidget } from "@/components/TicketWidget";
 import { AuthButton } from "@/components/AuthButton";
 
-// Complete list of US states
 const usStates = [
   { id: "AL", name: "Alabama" }, { id: "AK", name: "Alaska" }, { id: "AZ", name: "Arizona" },
   { id: "AR", name: "Arkansas" }, { id: "CA", name: "California" }, { id: "CO", name: "Colorado" },
@@ -30,81 +29,64 @@ const usStates = [
 
 const employeeCounts = ["1-5", "6-10", "11-20", "21-50", "51-100", "101-250", "251-500", "501-1000", "1000+"];
 
-const whatWeCover = [
+type ProductCategory = {
+  name: string
+  icon: string
+  items: { key: string; icon: string; name: string; description: string; protections: string[] }[]
+}
+
+const productCategories: ProductCategory[] = [
   {
-    name: "Business Insurance",
-    icon: "🏢",
-    description: "Comprehensive coverage that protects your business from common risks like property damage, liability claims, and business interruption.",
-    protections: ["Property damage from fire, theft, or natural disasters", "Liability claims from third parties", "Business interruption due to covered events", "Legal defense costs associated with covered claims"]
+    name: 'PERSONAL',
+    icon: '🚗',
+    items: [
+      { key: 'personal-auto', icon: '🚗', name: 'Auto Insurance', description: 'Coverage for your personal vehicles, protecting against accidents, theft, and liability.', protections: ['Accident coverage for your vehicle', 'Liability for bodily injury and property damage', 'Comprehensive coverage for theft and vandalism', 'Uninsured/underinsured motorist protection', 'Personal injury protection (PIP)'] },
+      { key: 'motorcycle', icon: '🏍️', name: 'Motorcycle Insurance', description: 'Protect your motorcycle, scooter, or ATV against accidents, theft, and liability.', protections: ['Collision coverage for your bike', 'Liability for bodily injury and property damage', 'Comprehensive coverage for theft and damage', 'Custom parts and equipment coverage', 'Uninsured motorist coverage'] },
+      { key: 'pet', icon: '🐾', name: 'Pet Insurance', description: 'Coverage for veterinary expenses, accidents, and illnesses for your furry family members.', protections: ['Accident and illness coverage', 'Hereditary and congenital conditions', 'Emergency veterinary care', 'Diagnostic tests and lab work', 'Medication and prescription food'] },
+      { key: 'mobile-device', icon: '📱', name: 'Mobile Device Protection', description: 'Protect your smartphones, tablets, and mobile devices against damage, loss, and theft.', protections: ['Screen and device damage', 'Liquid damage coverage', 'Theft and loss protection', 'Battery and charger replacement', 'Worldwide coverage'] },
+      { key: 'jewelry', icon: '💎', name: 'Jewelry Insurance', description: 'Specialized coverage for rings, watches, necklaces, and other valuable jewelry items.', protections: ['Loss, theft, or mysterious disappearance', 'Damage and breakage', 'Worldwide coverage', 'Appraised value coverage', 'No deductible options'] },
+      { key: 'event', icon: '🎉', name: 'Event Insurance', description: 'Coverage for weddings, parties, corporate events, and special occasions against unforeseen issues.', protections: ['Event cancellation or postponement', 'Liability for accidents at the event', 'Damage to venue or equipment', 'Weather-related cancellations', 'Vendor no-show protection'] },
+      { key: 'bicycle', icon: '🚲', name: 'Bicycle Insurance', description: 'Protect your bicycle against theft, damage, and liability while riding.', protections: ['Theft protection for your bike', 'Accidental damage coverage', 'Liability while riding', 'Racing and event coverage', 'Accessories and parts coverage'] },
+    ]
   },
   {
-    name: "General Liability Insurance",
-    icon: "⚖️",
-    description: "Protects your business from claims of bodily injury, property damage, and personal or advertising injury.",
-    protections: ["Bodily injury to customers on your property", "Property damage caused by operations", "Personal injury claims like slander", "Advertising injury claims", "Medical payments for minor injuries"]
+    name: 'PROPERTY',
+    icon: '🏠',
+    items: [
+      { key: 'homeowners', icon: '🏠', name: 'Homeowners Insurance', description: 'Comprehensive protection for your home, personal property, and liability against disasters.', protections: ['Structure and dwelling coverage', 'Personal property and belongings', 'Liability for injuries on your property', 'Additional living expenses', 'Natural disaster coverage (wind, hail, fire)'] },
+      { key: 'renters', icon: '🏢', name: 'Renters Insurance', description: 'Protection for your personal belongings and liability while renting a home or apartment.', protections: ['Personal property coverage', 'Liability protection', 'Additional living expenses', 'Theft and vandalism', 'Water damage coverage'] },
+      { key: 'mobile-home', icon: '🏘️', name: 'Mobile Home Insurance', description: 'Specialized coverage for manufactured and mobile homes, protecting structure and contents.', protections: ['Structure and dwelling coverage', 'Personal property protection', 'Liability coverage', 'Transportation damage', 'Detached structures coverage'] },
+      { key: 'condo', icon: '🏗️', name: 'Condo/Co-op Insurance', description: 'Coverage tailored for condominium and co-op owners, protecting interiors and belongings.', protections: ['Interior structure and improvements', 'Personal property coverage', 'Loss assessment coverage', 'Liability protection', 'Additional living expenses'] },
+    ]
   },
   {
-    name: "Business Owner's Policy (BOP)",
-    icon: "📦",
-    description: "A convenient package combining general liability and commercial property insurance at a lower cost.",
-    protections: ["General liability coverage", "Commercial property coverage", "Business interruption insurance", "Optional endorsements", "Simplified insurance management"]
-  },
-  {
-    name: "Workers' Compensation Insurance",
-    icon: "👷",
-    description: "Provides benefits to employees who suffer work-related injuries or illnesses.",
-    protections: ["Medical expenses for work-related injuries", "Lost wage replacement", "Rehabilitation costs", "Disability benefits", "Death benefits to families"]
-  },
-  {
-    name: "Commercial Property Insurance",
-    icon: "🏗️",
-    description: "Protects your business property from damage or loss due to fire, theft, vandalism, and natural disasters.",
-    protections: ["Building and structure protection", "Business equipment and machinery", "Inventory and stock", "Furniture and supplies", "Loss of income from property damage"]
-  },
-  {
-    name: "Commercial Auto Insurance",
-    icon: "🚗",
-    description: "Covers vehicles used for business purposes, protecting against accidents, damage, and liability claims.",
-    protections: ["Liability for bodily injury and property damage", "Collision coverage", "Comprehensive coverage", "Uninsured/underinsured motorist", "Medical payments for employees"]
-  },
-  {
-    name: "Professional Liability Insurance",
-    icon: "📋",
-    description: "Also known as errors and omissions insurance for service-based businesses.",
-    protections: ["Claims of professional negligence", "Errors and omissions in service delivery", "Failure to meet contractual obligations", "Legal defense costs", "Settlements and judgments"]
-  },
-  {
-    name: "Errors and Omissions (E&O)",
-    icon: "📊",
-    description: "Specialized coverage protecting against claims of financial harm from professional advice.",
-    protections: ["Financial harm from professional advice", "Mistakes in professional services", "Legal costs for defending claims", "Settlements and damages", "Contract dispute claims"]
-  },
-  {
-    name: "Tools & Equipment Insurance",
-    icon: "🛠️",
-    description: "Covers tools, equipment, and business assets against damage, loss, or theft.",
-    protections: ["Tools on job sites", "Equipment in transit", "Theft and accidental loss", "Rented or leased equipment", "Replacement costs"]
-  },
-  {
-    name: "Employment Practices Liability",
-    icon: "👥",
-    description: "Protects against claims of discrimination, harassment, and wrongful termination.",
-    protections: ["Discrimination claims", "Wrongful termination", "Sexual harassment allegations", "Retaliation claims", "Legal defense and settlement"]
+    name: 'BUSINESS',
+    icon: '💼',
+    items: [
+      { key: 'business-insurance', icon: '🏢', name: 'Business Insurance', description: 'Comprehensive coverage that protects your business from common risks like property damage, liability claims, and business interruption.', protections: ['Property damage from fire, theft, or natural disasters', 'Liability claims from third parties', 'Business interruption due to covered events', 'Legal defense costs', 'Equipment and inventory protection'] },
+      { key: 'professional-liability', icon: '📋', name: 'Professional Liability', description: 'Also known as errors and omissions insurance, protects service-based businesses against negligence claims.', protections: ['Claims of professional negligence', 'Errors and omissions in service delivery', 'Failure to meet contractual obligations', 'Legal defense costs', 'Settlements and judgments'] },
+      { key: 'workers-comp', icon: '👷', name: 'Workers Compensation', description: 'Provides benefits to employees who suffer work-related injuries or illnesses.', protections: ['Medical expenses for work-related injuries', 'Lost wage replacement', 'Rehabilitation costs', 'Disability benefits', 'Death benefits to families'] },
+      { key: 'general-liability', icon: '⚖️', name: 'General Liability', description: 'Protects your business from claims of bodily injury, property damage, and personal injury.', protections: ['Bodily injury to customers on your property', 'Property damage caused by operations', 'Personal injury claims like slander', 'Advertising injury claims', 'Medical payments for minor injuries'] },
+      { key: 'commercial-auto', icon: '🚚', name: 'Commercial Auto', description: 'Covers vehicles used for business purposes, protecting against accidents, damage, and liability.', protections: ['Liability for bodily injury and property damage', 'Collision coverage for business vehicles', 'Comprehensive coverage', 'Uninsured/underinsured motorist', 'Medical payments for employees'] },
+      { key: 'commercial-property', icon: '🏗️', name: 'Commercial Property', description: 'Protects business buildings, equipment, inventory, and assets from damage or loss.', protections: ['Building and structure protection', 'Business equipment and machinery', 'Inventory and stock', 'Loss of income from property damage', 'Furniture and supplies'] },
+    ]
   }
 ];
 
-const whoWeCover = ["Construction", "Contractors", "Consultants", "Cleaning", "Retail", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care"];
+const allProducts = productCategories.flatMap(cat => cat.items)
 
-const industries = ["Construction", "Contractors", "Consultants", "Cleaning Services", "Retail & E-commerce", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Other"];
+type CoverageItem = typeof allProducts[0]
+
+const whoWeCover = ["Construction", "Contractors", "Consultants", "Cleaning Services", "Retail", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Real Estate", "Transportation", "Technology", "Healthcare", "Non-Profit"];
+
+const industries = ["Construction", "Contractors", "Consultants", "Cleaning Services", "Retail & E-commerce", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Real Estate", "Transportation", "Technology", "Healthcare", "Non-Profit", "Other"];
 
 const incomeRanges = ["Less than $50,000", "$50,000 - $100,000", "$100,000 - $250,000", "$250,000 - $500,000", "$500,000 - $1,000,000", "$1,000,000 - $5,000,000", "More than $5,000,000"];
-
-type CoverageItem = (typeof whatWeCover)[number]
 
 type Language = 'en' | 'es'
 
 const translations: Record<Language, {
-  nav: { products: string; support: string; about: string; contact: string; getQuote: string; signIn: string }
+  nav: { products: string; personal: string; property: string; business: string; support: string; about: string; contact: string; getQuote: string; signIn: string }
   hero: { badge: string; title1: string; titleAccent: string; title2: string; subtitle: string; cta1: string; cta2: string }
   stats: { years: string; clients: string; policies: string; support: string }
   services: { label: string; title: string; subtitle: string }
@@ -115,24 +97,24 @@ const translations: Record<Language, {
   coverageModal: { title: string }
 }> = {
   en: {
-    nav: { products: 'Products', support: 'Support', about: 'About Us', contact: 'Contact', getQuote: 'Get a Quote', signIn: 'Sign In' },
-    hero: { badge: 'Trusted by 500+ Businesses', title1: 'Protect Your', titleAccent: 'Business', title2: 'With Confidence', subtitle: 'Comprehensive commercial insurance solutions tailored to safeguard your business assets and operations. Your trusted partner on Horsham PA, USA.', cta1: 'Request Quote', cta2: 'Explore Services' },
+    nav: { products: 'Products', personal: 'Personal', property: 'Property', business: 'Business', support: 'Support', about: 'About Us', contact: 'Contact', getQuote: 'Get a Quote', signIn: 'Sign In' },
+    hero: { badge: 'Trusted by 500+ Businesses', title1: 'Protect What Matters', titleAccent: 'Most', title2: 'With Olimpo', subtitle: 'Comprehensive insurance solutions for auto, home, business, and more. Your trusted partner on Horsham PA, USA.', cta1: 'Request Quote', cta2: 'Explore Services' },
     stats: { years: 'Years Experience', clients: 'Happy Clients', policies: 'Policies Issued', support: 'Support Available' },
-    services: { label: 'Our Services', title: 'Comprehensive Insurance Solutions', subtitle: 'Complete coverage options to protect every aspect of your business operations' },
-    about: { label: 'About Us', title: 'Your Trusted Insurance Partner', desc: 'With over 15 years of experience in the insurance industry, we are your reliable partner on Horsham PA, USA. We specialize in providing personalized insurance solutions for businesses of all sizes.', years: 'Years of Excellence', item1: 'Personalized consultation tailored to your business needs', item2: 'Competitive pricing with comprehensive coverage options', item3: '24/7 dedicated support team', item4: 'Fast and efficient claims processing' },
-    coverage: { label: 'Our Coverage', title: 'What We Cover & Who We Cover', subtitle: 'Comprehensive insurance solutions tailored for your specific industry and needs', what: 'What We Cover', who: 'Who We Cover' },
-    contact: { label: 'Request Your Quote', title: 'Get a Personalized Quote for Your Business', subtitle: 'Fill out the form and we will send you a quote tailored to your business needs', location: 'Horsham PA, USA', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Your Company Information', companyName: 'Company Name', contactPerson: 'Contact Person', industry: 'Industry/Sector', employees: 'Number of Employees', lawsuits: 'Have you been in civil lawsuits before?', income: 'Annual Company Income', additionalInfo: 'Additional Information', send: 'Send Quote via WhatsApp', companyPlaceholder: 'Your company name', namePlaceholder: 'Your full name', emailPlaceholder: 'email@company.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Tell us more about your needs...', selectIndustry: 'Select an industry', selectState: 'Select a state', selectEmployees: 'Select an option', selectLawsuits: 'Select an option', selectIncome: 'Select a range', yes: 'Yes', no: 'No', state: 'Location (State)' },
+    services: { label: 'Our Services', title: 'Insurance Solutions for Every Need', subtitle: 'Complete coverage options to protect every aspect of your life and business' },
+    about: { label: 'About Us', title: 'Your Trusted Insurance Partner', desc: 'With over 15 years of experience in the insurance industry, we are your reliable partner on Horsham PA, USA. We specialize in providing personalized insurance solutions for individuals and businesses of all sizes.', years: 'Years of Excellence', item1: 'Personalized consultation tailored to your needs', item2: 'Competitive pricing with comprehensive coverage options', item3: '24/7 dedicated support team', item4: 'Fast and efficient claims processing' },
+    coverage: { label: 'Our Coverage', title: 'What We Cover', subtitle: 'Comprehensive insurance solutions tailored for your specific needs', what: 'All Coverage Options', who: 'Who We Cover' },
+    contact: { label: 'Request Your Quote', title: 'Get a Personalized Quote', subtitle: 'Fill out the form and we will send you a quote tailored to your needs', location: 'Horsham PA, USA', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Your Information', companyName: 'Company Name', contactPerson: 'Contact Person', industry: 'Industry/Sector', employees: 'Number of Employees', lawsuits: 'Have you been in civil lawsuits before?', income: 'Annual Company Income', additionalInfo: 'Additional Information', send: 'Send Quote via WhatsApp', companyPlaceholder: 'Your company name', namePlaceholder: 'Your full name', emailPlaceholder: 'email@company.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Tell us more about your needs...', selectIndustry: 'Select an industry', selectState: 'Select a state', selectEmployees: 'Select an option', selectLawsuits: 'Select an option', selectIncome: 'Select a range', yes: 'Yes', no: 'No', state: 'Location (State)' },
     footer: { home: 'Home', services: 'Services', about: 'About', contact: 'Contact', rights: '© 2026 Olimpo Coverage Group. All rights reserved.' },
     coverageModal: { title: 'What this coverage helps protect you from' }
   },
   es: {
-    nav: { products: 'Productos', support: 'Soporte', about: 'Sobre Nosotros', contact: 'Contacto', getQuote: 'Solicitar Cotización', signIn: 'Iniciar Sesión' },
-    hero: { badge: 'Confiado por 500+ Empresas', title1: 'Protege tu', titleAccent: 'Negocio', title2: 'Con Confianza', subtitle: 'Soluciones integrales de seguros comerciales diseñadas para proteger los activos y operaciones de tu empresa. Tu socio de confianza en Horsham PA, EE.UU.', cta1: 'Solicitar Cotización', cta2: 'Explorar Servicios' },
+    nav: { products: 'Productos', personal: 'Personal', property: 'Propiedad', business: 'Negocios', support: 'Soporte', about: 'Sobre Nosotros', contact: 'Contacto', getQuote: 'Solicitar Cotización', signIn: 'Iniciar Sesión' },
+    hero: { badge: 'Confiado por 500+ Empresas', title1: 'Protege lo que más', titleAccent: 'Importa', title2: 'Con Olimpo', subtitle: 'Soluciones integrales de seguros para auto, hogar, negocios y más. Tu socio de confianza en Horsham PA, EE.UU.', cta1: 'Solicitar Cotización', cta2: 'Explorar Servicios' },
     stats: { years: 'Años de Experiencia', clients: 'Clientes Satisfechos', policies: 'Pólizas Emitidas', support: 'Soporte Disponible' },
-    services: { label: 'Nuestros Servicios', title: 'Soluciones Integrales de Seguros', subtitle: 'Opciones de cobertura completa para proteger cada aspecto de tus operaciones comerciales' },
-    about: { label: 'Sobre Nosotros', title: 'Tu Socio de Confianza en Seguros', desc: 'Con más de 15 años de experiencia en la industria de seguros, somos tu socio confiable en Horsham PA, EE.UU. Nos especializamos en brindar soluciones de seguros personalizadas para empresas de todos los tamaños.', years: 'Años de Excelencia', item1: 'Consultoría personalizada según las necesidades de tu negocio', item2: 'Precios competitivos con opciones de cobertura integral', item3: 'Equipo de soporte dedicado 24/7', item4: 'Procesamiento rápido y eficiente de reclamos' },
-    coverage: { label: 'Nuestra Cobertura', title: 'Lo Que Cubrimos y a Quién Cubrimos', subtitle: 'Soluciones de seguros integrales adaptadas a tu industria y necesidades específicas', what: 'Lo Que Cubrimos', who: 'A Quién Cubrimos' },
-    contact: { label: 'Solicita tu Cotización', title: 'Obtén una Cotización Personalizada', subtitle: 'Completa el formulario y te enviaremos una cotización adaptada a las necesidades de tu negocio', location: 'Horsham PA, EE.UU.', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Información de tu Empresa', companyName: 'Nombre de la Empresa', contactPerson: 'Persona de Contacto', industry: 'Industria/Sector', employees: 'Número de Empleados', lawsuits: '¿Ha tenido demandas civiles antes?', income: 'Ingreso Anual de la Empresa', additionalInfo: 'Información Adicional', send: 'Enviar Cotización por WhatsApp', companyPlaceholder: 'Nombre de tu empresa', namePlaceholder: 'Tu nombre completo', emailPlaceholder: 'email@empresa.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Cuéntanos más sobre tus necesidades...', selectIndustry: 'Selecciona una industria', selectState: 'Selecciona un estado', selectEmployees: 'Selecciona una opción', selectLawsuits: 'Selecciona una opción', selectIncome: 'Selecciona un rango', yes: 'Sí', no: 'No', state: 'Ubicación (Estado)' },
+    services: { label: 'Nuestros Servicios', title: 'Soluciones de Seguros para Cada Necesidad', subtitle: 'Opciones de cobertura completa para proteger cada aspecto de tu vida y negocio' },
+    about: { label: 'Sobre Nosotros', title: 'Tu Socio de Confianza en Seguros', desc: 'Con más de 15 años de experiencia en la industria de seguros, somos tu socio confiable en Horsham PA, EE.UU. Nos especializamos en brindar soluciones de seguros personalizadas para individuos y empresas de todos los tamaños.', years: 'Años de Excelencia', item1: 'Consultoría personalizada según tus necesidades', item2: 'Precios competitivos con opciones de cobertura integral', item3: 'Equipo de soporte dedicado 24/7', item4: 'Procesamiento rápido y eficiente de reclamos' },
+    coverage: { label: 'Nuestra Cobertura', title: 'Lo Que Cubrimos', subtitle: 'Soluciones de seguros integrales adaptadas a tus necesidades específicas', what: 'Todas las Opciones de Cobertura', who: 'A Quién Cubrimos' },
+    contact: { label: 'Solicita tu Cotización', title: 'Obtén una Cotización Personalizada', subtitle: 'Completa el formulario y te enviaremos una cotización adaptada a tus necesidades', location: 'Horsham PA, EE.UU.', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Tu Información', companyName: 'Nombre de la Empresa', contactPerson: 'Persona de Contacto', industry: 'Industria/Sector', employees: 'Número de Empleados', lawsuits: '¿Ha tenido demandas civiles antes?', income: 'Ingreso Anual de la Empresa', additionalInfo: 'Información Adicional', send: 'Enviar Cotización por WhatsApp', companyPlaceholder: 'Nombre de tu empresa', namePlaceholder: 'Tu nombre completo', emailPlaceholder: 'email@empresa.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Cuéntanos más sobre tus necesidades...', selectIndustry: 'Selecciona una industria', selectState: 'Selecciona un estado', selectEmployees: 'Selecciona una opción', selectLawsuits: 'Selecciona una opción', selectIncome: 'Selecciona un rango', yes: 'Sí', no: 'No', state: 'Ubicación (Estado)' },
     footer: { home: 'Inicio', services: 'Servicios', about: 'Nosotros', contact: 'Contacto', rights: '© 2026 Olimpo Coverage Group. Todos los derechos reservados.' },
     coverageModal: { title: 'Lo que esta cobertura ayuda a protegerte' }
   }
@@ -173,7 +155,7 @@ export default function Home() {
     const { companyName, contactName, email, phone, industry, state, employees, hasLawsuits, annualIncome, additionalInfo } = quoteForm;
     const message = encodeURIComponent(
       `*NEW QUOTE REQUEST*\n\n` +
-      `*Company Information:*\n` +
+      `*Contact Information:*\n` +
       `Company Name: ${companyName}\n` +
       `Contact Person: ${contactName}\n` +
       `Email: ${email}\n` +
@@ -243,7 +225,7 @@ export default function Home() {
 
             {/* Center Navigation */}
             <div className="hidden lg:flex items-center gap-1">
-              {/* Products Dropdown */}
+              {/* Products Dropdown - Multi-column with categories */}
               <div className="relative" ref={productsRef}>
                 <button
                   onClick={() => setShowProducts(!showProducts)}
@@ -258,21 +240,28 @@ export default function Home() {
                 </button>
 
                 {showProducts && (
-                  <div className="absolute top-full left-0 mt-2 w-[600px] bg-white border border-gray-200 rounded-xl shadow-2xl p-4 grid grid-cols-2 gap-2">
-                    {whatWeCover.map((item) => (
-                      <button
-                        key={item.name}
-                        onClick={() => openCoverageModal(item)}
-                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-blue-50 transition-all text-left"
-                      >
-                        <span className="text-2xl">{item.icon}</span>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">{item.name}</p>
-                          <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
-                        </div>
-                      </button>
+                  <div className="absolute top-full left-0 mt-2 w-[800px] bg-white border border-gray-200 rounded-xl shadow-2xl p-5 grid grid-cols-3 gap-4">
+                    {productCategories.map((category) => (
+                      <div key={category.name}>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-400 mb-3 pb-2 border-b border-gray-100">
+                          {category.name === 'PERSONAL' ? t.nav.personal : category.name === 'PROPERTY' ? t.nav.property : t.nav.business}
+                        </h3>
+                        <ul className="space-y-1">
+                          {category.items.map((item) => (
+                            <li key={item.key}>
+                              <button
+                                onClick={() => openCoverageModal(item)}
+                                className="flex items-center gap-2.5 w-full p-2 rounded-lg hover:bg-blue-50 transition-all text-left group"
+                              >
+                                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors">{item.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ))}
-                    <div className="col-span-2 mt-2 pt-3 border-t border-gray-100">
+                    <div className="col-span-3 mt-3 pt-3 border-t border-gray-100">
                       <Link
                         href="#contact"
                         onClick={() => setShowProducts(false)}
@@ -308,7 +297,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Get a Quote Button */}
               <Link
                 href="#contact"
                 className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md shadow-blue-600/20"
@@ -380,7 +368,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Coverage Categories Overview */}
       <section id="services" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -388,21 +376,30 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-4 text-gray-900">{t.services.title}</h2>
             <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t.services.subtitle}</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { icon: "⚖️", title: "General Liability", desc: "Protect your business against claims of property damage, bodily injury, and personal injury." },
-              { icon: "🏢", title: "Commercial Property", desc: "Coverage for your building, equipment, inventory, and other physical assets." },
-              { icon: "🚗", title: "Commercial Auto", desc: "Protect your business vehicles and drivers from accidents, damage, and liability." },
-              { icon: "👷", title: "Workers' Comp", desc: "Medical benefits and wage replacement to employees injured during work." },
-              { icon: "📊", title: "Business Interruption", desc: "Coverage for lost income when business operations are temporarily halted." },
-              { icon: "🛠️", title: "Tools & Equipment", desc: "Coverage for tools, equipment, and assets on and off the job site." },
-            ].map((service, index) => (
-              <div key={index} className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all group">
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-2xl">{service.icon}</span>
+
+          {/* Categories */}
+          <div className="space-y-12">
+            {productCategories.map((category) => (
+              <div key={category.name}>
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <span className="text-2xl">{category.icon}</span>
+                  <span>{category.name === 'PERSONAL' ? t.nav.personal : category.name === 'PROPERTY' ? t.nav.property : t.nav.business}</span>
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {category.items.map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => openCoverageModal(item)}
+                      className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all text-left group"
+                    >
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <span className="text-xl">{item.icon}</span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">{item.name}</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{item.description}</p>
+                    </button>
+                  ))}
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">{service.title}</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">{service.desc}</p>
               </div>
             ))}
           </div>
@@ -442,7 +439,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* What We Cover & Who We Cover */}
+      {/* All Coverage Options */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -454,37 +451,46 @@ export default function Home() {
             {/* What We Cover */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-6">{t.coverage.what}</h3>
-              <ul className="space-y-3">
-                {whatWeCover.map((item, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      onClick={() => openCoverageModal(item)}
-                      className="w-full flex items-center gap-3 text-left p-3 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-all"
-                    >
-                      <span className="text-2xl">{item.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-gray-800 font-semibold">{item.name}</span>
-                        <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{item.description}</p>
-                      </div>
-                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </li>
+              <div className="space-y-4">
+                {productCategories.map((category) => (
+                  <div key={category.name}>
+                    <h4 className="text-sm font-bold uppercase tracking-wide text-gray-400 mb-2 flex items-center gap-2">
+                      <span>{category.icon}</span>
+                      <span>{category.name === 'PERSONAL' ? t.nav.personal : category.name === 'PROPERTY' ? t.nav.property : t.nav.business}</span>
+                    </h4>
+                    <ul className="space-y-1">
+                      {category.items.map((item, idx) => (
+                        <li key={idx}>
+                          <button
+                            type="button"
+                            onClick={() => openCoverageModal(item)}
+                            className="w-full flex items-center gap-2.5 text-left p-2.5 rounded-lg border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                          >
+                            <span className="text-lg">{item.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-semibold text-gray-800">{item.name}</span>
+                            </div>
+                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
             {/* Who We Cover */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-6">{t.coverage.who}</h3>
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {whoWeCover.map((item, index) => (
                   <li key={index} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
-                    <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-600 text-lg">✓</span>
+                    <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-sm">✓</span>
                     </div>
-                    <span className="text-gray-700">{item}</span>
+                    <span className="text-gray-700 text-sm">{item}</span>
                   </li>
                 ))}
               </ul>
