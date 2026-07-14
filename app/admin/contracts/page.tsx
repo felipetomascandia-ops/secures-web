@@ -1910,9 +1910,181 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
     );
   }
 
+  const CertificatePersonalAuto = ({ coverage, index }: { coverage: Coverage; index: number }) => {
+    return (
+      <div id={`certificate-${index}`} className="bg-white text-slate-900 p-8 rounded-xl">
+        <div className="max-w-4xl mx-auto border-2 border-slate-800 p-8">
+          {/* Header */}
+          <div className="text-center mb-6 pb-4 border-b-2 border-slate-800">
+            <h2 className="text-2xl font-bold uppercase tracking-wide">FINANCIAL RESPONSIBILITY IDENTIFICATION CARD</h2>
+            <p className="text-xs text-slate-600 mt-1">Personal Auto Insurance</p>
+          </div>
+
+          {/* Policy Info */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-700">Policy Number:</p>
+              <p className="text-sm font-bold">{coverage.policyNumber}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-700">Policy Period:</p>
+              <p className="text-sm">{coverage.effectiveDate} - {coverage.expirationDate || 'N/A'}</p>
+            </div>
+          </div>
+
+          {/* Named Insureds Section */}
+          <div className="border-t border-slate-300 pt-4 mb-4">
+            <p className="text-xs font-semibold uppercase text-slate-800 mb-3">Named Insured(s):</p>
+            
+            {/* First Insured */}
+            <div className="mb-3">
+              <p className="text-xs font-semibold text-slate-700 mb-1">Insured #1:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  className="border border-slate-300 p-2 text-sm"
+                  defaultValue={clientFirstName}
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  className="border border-slate-300 p-2 text-sm"
+                  defaultValue={clientLastName}
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Address"
+                className="border border-slate-300 p-2 text-sm mt-2 w-full"
+                defaultValue={clientAddress1}
+              />
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="border border-slate-300 p-2 text-sm"
+                  defaultValue={clientCity}
+                />
+                <input
+                  type="text"
+                  placeholder="State"
+                  className="border border-slate-300 p-2 text-sm"
+                  defaultValue={clientState}
+                />
+                <input
+                  type="text"
+                  placeholder="ZIP"
+                  className="border border-slate-300 p-2 text-sm"
+                  defaultValue={clientZip}
+                />
+              </div>
+            </div>
+
+            {/* Second Insured (Optional) */}
+            <div>
+              <p className="text-xs font-semibold text-slate-700 mb-1">Insured #2 (Optional):</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  className="border border-slate-300 p-2 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  className="border border-slate-300 p-2 text-sm"
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Address (if different)"
+                className="border border-slate-300 p-2 text-sm mt-2 w-full"
+              />
+            </div>
+          </div>
+
+          {/* Vehicle Information */}
+          <div className="border-t border-slate-300 pt-4 mb-4">
+            <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Vehicle Information:</p>
+            <div className="grid grid-cols-4 gap-2 text-xs border border-slate-300 p-2">
+              <div>
+                <span className="font-bold text-slate-800">Year</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-800">Make</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-800">Model</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-800">VIN</span>
+              </div>
+              <input type="text" className="border border-slate-200 p-1" placeholder="Year" />
+              <input type="text" className="border border-slate-200 p-1" placeholder="Make" />
+              <input type="text" className="border border-slate-200 p-1" placeholder="Model" />
+              <input type="text" className="border border-slate-200 p-1" placeholder="VIN" />
+            </div>
+          </div>
+
+          {/* Coverage Details */}
+          <div className="border-t border-slate-300 pt-4 mb-4">
+            <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Coverage Details:</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-slate-600">Bodily Injury Liability (Per Person)</p>
+                <p className="text-sm font-semibold">{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerPerson))}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-600">Bodily Injury Liability (Per Accident)</p>
+                <p className="text-sm font-semibold">{formatCurrencyDisplay(parseCurrencyValue(coverage.bodilyInjuryPerAccident))}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-600">Property Damage Liability</p>
+                <p className="text-sm font-semibold">{formatCurrencyDisplay(parseCurrencyValue(coverage.propertyDamagePerAccident))}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-600">Deductible</p>
+                <p className="text-sm font-semibold">{formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Important Notice */}
+          <div className="border-t border-slate-300 pt-4">
+            <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Important Notice:</p>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              This card must be carried in the insured vehicle and produced upon demand to law enforcement officers. 
+              This card is valid for one year from the effective date. If you have questions about your coverage, 
+              contact Olimpo Coverage Group at (445) 325-0112.
+            </p>
+          </div>
+
+          {/* Signature */}
+          <div className="mt-6 pt-4 border-t border-slate-300">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Authorized Representative</p>
+                <div className="border-b border-slate-900 w-40 h-12 flex items-end justify-center mt-2">
+                  <SignatureGraphic />
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-600">Date Issued:</p>
+                <p className="text-sm font-semibold">{new Date().toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderCertificate = (coverage: Coverage, index: number) => {
     if (coverage.insuranceType === 'commercial-auto') {
       return <CertificateCommercialAuto coverage={coverage} index={index} />
+    } else if (coverage.insuranceType === 'personal-auto') {
+      return <CertificatePersonalAuto coverage={coverage} index={index} />
     } else {
       return <Acord25Certificate coverage={coverage} index={index} />
     }
