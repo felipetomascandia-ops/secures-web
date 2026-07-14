@@ -34,7 +34,7 @@ export async function GET(req: Request) {
       .from('payments')
       .select('*')
       .or(`square_checkout_id.eq.${search},checkout_id.eq.${search}`)
-      .single()
+      .single() as Promise<{ data: Record<string, unknown> | null; error: unknown }>
 
     if (!paymentQuery.error && paymentQuery.data) {
       return NextResponse.json({ success: true, payment: paymentQuery.data })
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       .from('payment_schedules')
       .select('*')
       .eq('checkout_id', search)
-      .single()
+      .single() as Promise<{ data: Record<string, unknown> | null; error: unknown }>
 
     if (!scheduleQuery.error && scheduleQuery.data) {
       const schedule = scheduleQuery.data as Record<string, unknown>
