@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSupabase } from '@/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
 import AdminShell from '@/components/admin/AdminShell'
+import type { Database } from '@/types/supabase'
 
 type Ticket = {
   id: string
@@ -35,6 +36,7 @@ export default function AdminTicketsPage() {
   const [messages, setMessages] = useState<TicketMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -79,7 +81,7 @@ export default function AdminTicketsPage() {
   }
 
   const updateStatus = async (id: string, status: Ticket['status']) => {
-    const updateObj: Partial<import('@/types/supabase').Database['public']['Tables']['tickets']['Update']> = {
+    const updateObj: Partial<Database['public']['Tables']['tickets']['Update']> = {
       status,
       updated_at: new Date().toISOString(),
     }
@@ -175,6 +177,22 @@ export default function AdminTicketsPage() {
     return labels[status as keyof typeof labels] || 'Open'
   }
 
+  const deleteTicket = async (ticketId: string) => {
+    if (!window.confirm('Are you sure you want to delete this ticket and its messages?')) return
+    setDeletingTicketId(ticketId)
+
+    try {
+      await (supabase as unknown as any).from('ticket_messages').delete().eq('ticket_id', ticketId)
+      await (supabase as unknown as any).from('tickets').delete().eq('id', ticketId)
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(null)
+      }
+      fetchTickets()
+    } finally {
+      setDeletingTicketId(null)
+    }
+  }
+
   if (authLoading || isCheckingAdmin) {
     return (
       <AdminShell>
@@ -261,18 +279,25 @@ export default function AdminTicketsPage() {
                   <h2 className="text-xl font-bold text-white mb-1">{selectedTicket.title}</h2>
                   <p className="text-slate-400 whitespace-pre-wrap text-sm">{selectedTicket.description}</p>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0 items-center">
                   <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getStatusBadge(selectedTicket.status)}`}>
                     {getStatusLabel(selectedTicket.status)}
                   </span>
                   <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${getPriorityBadge(selectedTicket.priority)}`}>
                     {getPriorityLabel(selectedTicket.priority)}
                   </span>
+                  <button
+                    onClick={() => deleteTicket(selectedTicket.id)}
+                    disabled={deletingTicketId === selectedTicket.id}
+                    className="px-3 py-1 rounded-lg text-xs font-semibold text-red-400 border border-red-500/30 hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {deletingTicketId === selectedTicket.id ? 'Deleting...' : 'Delete Ticket'}
+                  </button>
                 </div>
               </div>
 
               {/* Status Update Buttons */}
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3 items-center">
                 {selectedTicket.status !== 'open' && (
                   <button
                     onClick={() => updateStatus(selectedTicket.id, 'open')}
@@ -427,6 +452,13 @@ export default function AdminTicketsPage() {
                     <div className="text-sm text-slate-400">{new Date(ticket.created_at).toLocaleDateString()}</div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => fetchTicketDetail(ticket)} className="text-blue-400 hover:text-blue-300">Open</button>
+                      <button
+                        onClick={() => deleteTicket(ticket.id)}
+                        disabled={deletingTicketId === ticket.id}
+                        className="text-red-400 hover:text-red-300 disabled:opacity-50"
+                      >
+                        {deletingTicketId === ticket.id ? 'Deleting...' : 'Delete'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -435,7 +467,7 @@ export default function AdminTicketsPage() {
           </div>
         )}
       </div>
-      </div>
-    </AdminShell>
-  )
+    </div>
+  </AdminShell>
+)
 }
