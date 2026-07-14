@@ -2259,7 +2259,7 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-4 gap-4 mt-4">
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-2">Effective Date</label>
                         <input
@@ -2278,263 +2278,21 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
                           className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Each Occurrence</label>
-                        <input
-                          value={coverage.eachOccurrence}
-                          onChange={(e) => updateCoverage(coverage.id, 'eachOccurrence', e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          placeholder="1000000"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">General Aggregate</label>
-                        <input
-                          value={coverage.generalAggregate}
-                          onChange={(e) => updateCoverage(coverage.id, 'generalAggregate', e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          placeholder="2000000"
-                        />
-                      </div>
                     </div>
 
-                    {coverage.insuranceType === 'general-liability' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Damage to Rented Premises</label>
+                    {/* Dynamic limits fields based on insurance type */}
+                    <div className="grid md:grid-cols-3 gap-4 mt-4">
+                      {getCoverageLimitsFields(coverage.insuranceType).map((field) => (
+                        <div key={field.key}>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">{field.label}</label>
                           <input
-                            value={coverage.damageToRentedPremises}
-                            onChange={(e) => updateCoverage(coverage.id, 'damageToRentedPremises', e.target.value)}
+                            value={coverage[field.key]}
+                            onChange={(e) => updateCoverage(coverage.id, field.key, e.target.value)}
                             className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="50000"
+                            placeholder={field.label}
                           />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Med Exp (Any one person)</label>
-                          <input
-                            value={coverage.medExp}
-                            onChange={(e) => updateCoverage(coverage.id, 'medExp', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="5000"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Personal & Adv Injury</label>
-                          <input
-                            value={coverage.personalAdvInjury}
-                            onChange={(e) => updateCoverage(coverage.id, 'personalAdvInjury', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="1000000"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {coverage.insuranceType === 'commercial-auto' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Any Auto</label>
-                          <input
-                            value={coverage.autoAnyAuto}
-                            onChange={(e) => updateCoverage(coverage.id, 'autoAnyAuto', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Any Auto limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Owned Autos</label>
-                          <input
-                            value={coverage.autoOwnedAuto}
-                            onChange={(e) => updateCoverage(coverage.id, 'autoOwnedAuto', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Owned autos limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Hired Autos Only</label>
-                          <input
-                            value={coverage.autoHiredAutosOnly}
-                            onChange={(e) => updateCoverage(coverage.id, 'autoHiredAutosOnly', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Hired autos limit"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {coverage.insuranceType === 'commercial-auto' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Non-Owned Autos Only</label>
-                          <input
-                            value={coverage.autoNonOwnedAutosOnly}
-                            onChange={(e) => updateCoverage(coverage.id, 'autoNonOwnedAutosOnly', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Non-owned autos limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Scheduled Autos</label>
-                          <input
-                            value={coverage.autoScheduledAutos}
-                            onChange={(e) => updateCoverage(coverage.id, 'autoScheduledAutos', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Scheduled autos limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Combined Single Limit</label>
-                          <input
-                            value={coverage.combinedSingleLimit}
-                            onChange={(e) => updateCoverage(coverage.id, 'combinedSingleLimit', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {coverage.insuranceType === 'commercial-property' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Building Limit</label>
-                          <input
-                            value={coverage.propertyBuildingLimit}
-                            onChange={(e) => updateCoverage(coverage.id, 'propertyBuildingLimit', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Building limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Business Personal Property</label>
-                          <input
-                            value={coverage.propertyPersonalPropertyLimit}
-                            onChange={(e) => updateCoverage(coverage.id, 'propertyPersonalPropertyLimit', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="Personal property limit"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Deductible</label>
-                          <input
-                            value={coverage.deductible}
-                            onChange={(e) => updateCoverage(coverage.id, 'deductible', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="1000"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {coverage.insuranceType === 'general-liability' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Products - Comp/Op Agg</label>
-                          <input
-                            value={coverage.productsCompletedOpsAgg}
-                            onChange={(e) => updateCoverage(coverage.id, 'productsCompletedOpsAgg', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="1000000"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Combined Single Limit</label>
-                          <input
-                            value={coverage.combinedSingleLimit}
-                            onChange={(e) => updateCoverage(coverage.id, 'combinedSingleLimit', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Bodily Injury Per Person</label>
-                          <input
-                            value={coverage.bodilyInjuryPerPerson}
-                            onChange={(e) => updateCoverage(coverage.id, 'bodilyInjuryPerPerson', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {coverage.insuranceType === 'general-liability' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Bodily Injury Per Accident</label>
-                          <input
-                            value={coverage.bodilyInjuryPerAccident}
-                            onChange={(e) => updateCoverage(coverage.id, 'bodilyInjuryPerAccident', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">Property Damage Per Accident</label>
-                          <input
-                            value={coverage.propertyDamagePerAccident}
-                            onChange={(e) => updateCoverage(coverage.id, 'propertyDamagePerAccident', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">E.L. Each Accident</label>
-                          <input
-                            value={coverage.elEachAccident}
-                            onChange={(e) => updateCoverage(coverage.id, 'elEachAccident', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Certificate Holder Name (Optional)</label>
-                        <input
-                          value={coverage.certificateHolderName}
-                          onChange={(e) => updateCoverage(coverage.id, 'certificateHolderName', e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          placeholder="Leave blank to use insured name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Certificate Holder Address (Optional)</label>
-                        <input
-                          value={coverage.certificateHolderAddress}
-                          onChange={(e) => updateCoverage(coverage.id, 'certificateHolderAddress', e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          placeholder="Leave blank if not needed"
-                        />
-                      </div>
-                    </div>
-
-                    {coverage.insuranceType === 'general-liability' && (
-                      <div className="grid md:grid-cols-3 gap-4 mt-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">E.L. Disease - Ea Employee</label>
-                          <input
-                            value={coverage.elDiseaseEaEmployee}
-                            onChange={(e) => updateCoverage(coverage.id, 'elDiseaseEaEmployee', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">E.L. Disease - Policy Limit</label>
-                          <input
-                            value={coverage.elDiseasePolicyLimit}
-                            onChange={(e) => updateCoverage(coverage.id, 'elDiseasePolicyLimit', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div />
-                      </div>
-                    )}
-
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Deductible</label>
-                      <input
-                        value={coverage.deductible}
-                        onChange={(e) => updateCoverage(coverage.id, 'deductible', e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                        placeholder="1000"
-                      />
+                      ))}
                     </div>
                   </div>
                 ))}
