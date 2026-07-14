@@ -22,14 +22,29 @@ type InsuranceType = {
   key: string
   name: string
   label: string
-  certificateType: 'workers-comp' | 'general-liability' | 'commercial-auto' | 'property'
+  certificateType: 'workers-comp' | 'general-liability' | 'commercial-auto' | 'property' | 'personal-auto' | 'motorcycle' | 'pet' | 'mobile-device' | 'event' | 'bicycle' | 'homeowners' | 'renters' | 'mobile-home' | 'condo' | 'business-insurance' | 'professional-liability'
 }
 
 const insuranceTypes: InsuranceType[] = [
+  // Personal
+  { key: 'personal-auto', name: 'Personal Auto Insurance', label: 'Auto', certificateType: 'personal-auto' },
+  { key: 'motorcycle', name: 'Motorcycle Insurance', label: 'Motorcycle', certificateType: 'motorcycle' },
+  { key: 'pet', name: 'Pet Insurance', label: 'Pet', certificateType: 'pet' },
+  { key: 'mobile-device', name: 'Mobile Device Protection', label: 'Mobile Device', certificateType: 'mobile-device' },
+  { key: 'event', name: 'Event Insurance', label: 'Event', certificateType: 'event' },
+  { key: 'bicycle', name: 'Bicycle Insurance', label: 'Bicycle', certificateType: 'bicycle' },
+  // Property
+  { key: 'homeowners', name: 'Homeowners Insurance', label: 'Homeowners', certificateType: 'homeowners' },
+  { key: 'renters', name: 'Renters Insurance', label: 'Renters', certificateType: 'renters' },
+  { key: 'mobile-home', name: 'Mobile Home Insurance', label: 'Mobile Home', certificateType: 'mobile-home' },
+  { key: 'condo', name: 'Condo/Co-op Insurance', label: 'Condo/Co-op', certificateType: 'condo' },
+  // Business (existing)
   { key: 'workers-comp', name: 'Workers Compensation Insurance', label: 'Workers Comp', certificateType: 'workers-comp' },
   { key: 'general-liability', name: 'General Liability Insurance', label: 'General Liability', certificateType: 'general-liability' },
   { key: 'commercial-auto', name: 'Commercial Auto Insurance', label: 'Commercial Auto', certificateType: 'commercial-auto' },
   { key: 'commercial-property', name: 'Commercial Property Insurance', label: 'Commercial Property', certificateType: 'property' },
+  { key: 'business-insurance', name: 'Business Insurance', label: 'Business Insurance', certificateType: 'business-insurance' },
+  { key: 'professional-liability', name: 'Professional Liability Insurance', label: 'Professional Liability', certificateType: 'professional-liability' },
 ]
 
 type Coverage = {
