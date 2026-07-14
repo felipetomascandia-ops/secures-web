@@ -77,6 +77,14 @@ type Coverage = {
   propertyPersonalPropertyLimit: string
   certificateHolderName: string
   certificateHolderAddress: string
+  // Generic/simplified fields for new insurance types
+  annualLimit: string
+  perIncidentLimit: string
+  coverageLimit: string
+  itemValue: string
+  propertyValue: string
+  liabilityLimit: string
+  cancellationLimit: string
 }
 
 type Vehicle = {
@@ -532,6 +540,13 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
         propertyPersonalPropertyLimit: '',
         certificateHolderName: '',
         certificateHolderAddress: '',
+        annualLimit: '',
+        perIncidentLimit: '',
+        coverageLimit: '',
+        itemValue: '',
+        propertyValue: '',
+        liabilityLimit: '',
+        cancellationLimit: '',
       },
     ])
   }
