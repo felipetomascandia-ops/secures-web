@@ -178,15 +178,21 @@ export default function AdminTicketsPage() {
   }
 
   const deleteTicket = async (ticketId: string) => {
-    if (!window.confirm('Are you sure you want to delete this ticket and its messages?')) return
+    if (!window.confirm('Estás seguro de que quieres eliminar este ticket y sus mensajes?')) return
     setDeletingTicketId(ticketId)
+
+    // Optimistic UI: remove ticket from list immediately
+    setTickets(prev => prev.filter(t => t.id !== ticketId))
+    if (selectedTicket?.id === ticketId) {
+      setSelectedTicket(null)
+    }
 
     try {
       await (supabase as unknown as any).from('ticket_messages').delete().eq('ticket_id', ticketId)
       await (supabase as unknown as any).from('tickets').delete().eq('id', ticketId)
-      if (selectedTicket?.id === ticketId) {
-        setSelectedTicket(null)
-      }
+    } catch (error) {
+      console.error('Error deleting ticket:', error)
+      // Re-fetch on error to restore the actual state
       fetchTickets()
     } finally {
       setDeletingTicketId(null)
@@ -451,11 +457,16 @@ export default function AdminTicketsPage() {
                   <div className="mt-4 flex items-center justify-between gap-4">
                     <div className="text-sm text-slate-400">{new Date(ticket.created_at).toLocaleDateString()}</div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => fetchTicketDetail(ticket)} className="text-blue-400 hover:text-blue-300">Open</button>
+                      <button
+                        onClick={() => fetchTicketDetail(ticket)}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-all"
+                      >
+                        Open
+                      </button>
                       <button
                         onClick={() => deleteTicket(ticket.id)}
                         disabled={deletingTicketId === ticket.id}
-                        className="text-red-400 hover:text-red-300 disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all disabled:opacity-50"
                       >
                         {deletingTicketId === ticket.id ? 'Deleting...' : 'Delete'}
                       </button>
