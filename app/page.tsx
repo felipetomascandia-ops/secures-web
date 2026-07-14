@@ -280,9 +280,14 @@ export default function Home() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const transactionId = params.get('transactionId')
-    const orderId = params.get('orderId')
-    const checkoutId = orderId || transactionId
+    const checkoutId =
+      params.get('checkoutId') ||
+      params.get('checkout_id') ||
+      params.get('payment_link_id') ||
+      params.get('paymentLinkId') ||
+      params.get('transactionId') ||
+      params.get('orderId') ||
+      null
 
     if (checkoutId) {
       window.location.replace(`/admin/payments/success?checkoutId=${encodeURIComponent(checkoutId)}`)

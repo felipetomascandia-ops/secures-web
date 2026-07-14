@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     const paymentQuery = await supabaseAdmin
       .from('payments')
       .select('*')
-      .or(`square_checkout_id.eq.${search},checkout_id.eq.${search}`)
+      .or(`id.eq.${search},square_checkout_id.eq.${search},checkout_id.eq.${search},square_payment_id.eq.${search}`)
       .single<Record<string, unknown>>()
 
     if (!paymentQuery.error && paymentQuery.data) {
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     const scheduleQuery = await supabaseAdmin
       .from('payment_schedules')
       .select('*')
-      .eq('checkout_id', search)
+      .or(`id.eq.${search},checkout_id.eq.${search}`)
       .single<Record<string, unknown>>()
 
     if (!scheduleQuery.error && scheduleQuery.data) {
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
     const squarePaymentQuery = await supabaseAdmin
       .from('square_payments')
       .select('*')
-      .or(`square_checkout_id.eq.${search},square_payment_id.eq.${search}`)
+      .or(`square_checkout_id.eq.${search},square_payment_id.eq.${search},id.eq.${search},checkout_id.eq.${search}`)
       .single<Record<string, unknown>>()
 
     if (!squarePaymentQuery.error && squarePaymentQuery.data) {
