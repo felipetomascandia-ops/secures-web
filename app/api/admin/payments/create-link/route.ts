@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     console.info('Create checkout link request', { customer, amount, currency, idempotencyKey })
 
     const paymentId = typeof randomUUID === 'function' ? randomUUID() : `${Date.now()}-${Math.random()}`
-    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '')
+    const baseUrl = getBaseUrl(req)
     const successRedirectUrl = `${baseUrl}/admin/payments/success?paymentId=${encodeURIComponent(paymentId)}`
 
     const initialRecord = {
@@ -106,6 +106,9 @@ export async function POST(req: Request) {
       checkoutOptions: {
         redirectUrl: successRedirectUrl,
       },
+      checkout_options: {
+        redirect_url: successRedirectUrl,
+      },
     }
 
     let resp: unknown
@@ -149,4 +152,12 @@ export async function POST(req: Request) {
     console.error('create-link error', err)
     return NextResponse.json({ success: false, message: String(err) || 'Internal error' }, { status: 500 })
   }
+}
+
+function getBaseUrl(req: Request) {
+  const host = req.headers.get('host') || ''
+  if (host.includes('localhost')) {
+    return `http://${host}`.replace(/\/$/, '')
+  }
+  return 'https://olimpocoveragegroup.com'
 }

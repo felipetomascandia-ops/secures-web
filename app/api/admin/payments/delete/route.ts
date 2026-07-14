@@ -18,8 +18,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('delete payment error', err)
-    return NextResponse.json({ success: false, message: err?.message || 'Internal error' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Internal error'
+    return NextResponse.json({ success: false, message }, { status: 500 })
   }
 }
