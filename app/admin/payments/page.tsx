@@ -1,16 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import PaymentModal from '@/components/PaymentsModal'
 import AdminShell from '@/components/admin/AdminShell'
 
-type Payment = any
+type Payment = {
+  id: string
+  customer: string
+  email?: string
+  phone?: string
+  amount?: number | string
+  status?: string
+  created_at?: string
+  expires_at?: string | null
+  square_url?: string
+}
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPayments()
@@ -29,13 +41,47 @@ export default function AdminPaymentsPage() {
     }
   }
 
+  const deletePayment = async (paymentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this payment?')) return
+    setDeletingPaymentId(paymentId)
+    try {
+      const res = await fetch('/api/admin/payments/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        await fetchPayments()
+        if (expandedCustomer) setExpandedCustomer(expandedCustomer)
+      } else {
+        console.error('Delete payment failed', json)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setDeletingPaymentId(null)
+    }
+  }
+
   const stats = {
     totalPayments: payments.length,
     pending: payments.filter(p => p.status === 'pending').length,
     paid: payments.filter(p => p.status === 'paid').length,
     expired: payments.filter(p => p.status === 'expired').length,
-    totalRevenue: payments.filter(p => p.status === 'paid').reduce((s:number,p:any)=>s+Number(p.amount||0),0),
+    totalRevenue: payments.filter(p => p.status === 'paid').reduce((s:number,p)=>s+Number(p.amount||0),0),
   }
+
+  const paymentsByCustomer = useMemo(() => {
+    return payments.reduce((groups: Record<string, Payment[]>, payment) => {
+      const customer = payment.customer || 'Unnamed Client'
+      if (!groups[customer]) groups[customer] = []
+      groups[customer].push(payment)
+      return groups
+    }, {})
+  }, [payments])
+
+  const customers = Object.keys(paymentsByCustomer)
 
   return (
     <AdminShell>
@@ -78,55 +124,92 @@ export default function AdminPaymentsPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-slate-800/30 rounded-2xl border border-slate-700 p-4">
+        {/* Customers accordion */}
+        <div className="space-y-4">
           {loading ? (
             <div className="text-slate-400">Loading...</div>
+          ) : customers.length === 0 ? (
+            <div className="text-slate-400">No payments found.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-700">
-                <thead>
-                  <tr className="text-left text-sm text-slate-400">
-                    <th className="px-4 py-2">Client</th>
-                    <th className="px-4 py-2">Email</th>
-                    <th className="px-4 py-2">Amount</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Created</th>
-                    <th className="px-4 py-2">Expiration</th>
-                    <th className="px-4 py-2">Payment Link</th>
-                    <th className="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-700">
-                  {payments.map((p:any) => (
-                    <tr key={p.id} className="text-white text-sm">
-                      <td className="px-4 py-3">{p.customer}</td>
-                      <td className="px-4 py-3">{p.email}</td>
-                      <td className="px-4 py-3">${Number(p.amount||0).toFixed(2)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-500/20 text-green-400':p.status==='pending'?'bg-yellow-500/20 text-yellow-400':p.status==='expired'?'bg-red-500/20 text-red-400':'bg-slate-500/20 text-slate-400'}`}>
-                          {p.status}</span>
-                      </td>
-                      <td className="px-4 py-3">{new Date(p.created_at).toLocaleString()}</td>
-                      <td className="px-4 py-3">{p.expires_at ? new Date(p.expires_at).toLocaleDateString() : '-'}</td>
-                      <td className="px-4 py-3">{p.square_url ? (<a href={p.square_url} target="_blank" rel="noreferrer" className="underline text-blue-400">Open</a>) : '-'}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <button className="px-2 py-1 bg-slate-700 rounded">View</button>
-                          <button onClick={()=>navigator.clipboard.writeText(p.square_url||'')} className="px-2 py-1 bg-slate-700 rounded">Copy</button>
-                          <a href={`https://wa.me/${p.phone || ''}?text=Hello%20${encodeURIComponent(p.customer||'')}`} target="_blank" rel="noreferrer" className="px-2 py-1 bg-slate-700 rounded">WhatsApp</a>
+            customers.map((customer) => {
+              const customerPayments = paymentsByCustomer[customer] || []
+              const isExpanded = expandedCustomer === customer
+              const pendingCount = customerPayments.filter((p) => p.status === 'pending').length
+              return (
+                <div key={customer} className="rounded-3xl border border-slate-700 bg-slate-800/70">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCustomer(isExpanded ? null : customer)}
+                    className="flex w-full items-center justify-between gap-4 p-4 text-left"
+                  >
+                    <div>
+                      <div className="text-lg font-semibold text-white">{customer}</div>
+                      <div className="text-slate-400 text-sm">
+                        {customerPayments.length} payment{customerPayments.length === 1 ? '' : 's'} · {pendingCount} pending
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <span className="rounded-full bg-slate-900/80 px-3 py-1">{isExpanded ? 'Hide' : 'Show'}</span>
+                      <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="space-y-3 border-t border-slate-700/60 p-4">
+                      {customerPayments.map((payment) => (
+                        <div key={payment.id} className="rounded-2xl border border-slate-700 bg-slate-900/80 p-4">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap gap-2 text-sm text-slate-400">
+                                <span>Email: {payment.email || '-'}</span>
+                                <span>Phone: {payment.phone || '-'}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-3 items-center text-white">
+                                <span className="text-lg font-semibold">${Number(payment.amount || 0).toFixed(2)}</span>
+                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${payment.status === 'paid' ? 'bg-green-500/20 text-green-400' : payment.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : payment.status === 'expired' ? 'bg-red-500/20 text-red-400' : 'bg-slate-500/20 text-slate-400'}`}>
+                                  {payment.status || 'unknown'}
+                                </span>
+                              </div>
+                              <div className="text-slate-400 text-sm">
+                                Created: {payment.created_at ? new Date(payment.created_at).toLocaleString() : '-'}
+                                {' · '}Expires: {payment.expires_at ? new Date(payment.expires_at).toLocaleDateString() : '-'}
+                              </div>
+                              <div className="text-sm">
+                                Link: {payment.square_url ? (<a href={payment.square_url} target="_blank" rel="noreferrer" className="font-medium text-blue-400 underline">Open</a>) : '-'}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                onClick={() => deletePayment(payment.id)}
+                                disabled={deletingPaymentId === payment.id}
+                                className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-600/10 px-3 py-2 text-red-200 transition hover:bg-red-600/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                </svg>
+                                <span>{deletingPaymentId === payment.id ? 'Deleting...' : 'Delete payment'}</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })
           )}
         </div>
       </div>
 
-      {showModal && <PaymentModal onClose={()=>{setShowModal(false); fetchPayments()}} />}
+      {showModal && <PaymentModal onClose={() => { setShowModal(false); fetchPayments() }} />}
       </div>
     </AdminShell>
   )
