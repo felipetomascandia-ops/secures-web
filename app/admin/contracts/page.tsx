@@ -151,6 +151,15 @@ const getInsuranceTypeLabel = (typeKey: string) => {
   return insuranceTypes.find((type) => type.key === typeKey)?.name || 'Insurance Premium Finance Agreement'
 }
 
+const personalTypes = ['personal-auto', 'motorcycle', 'bicycle', 'pet', 'mobile-device', 'event', 'homeowners', 'renters', 'mobile-home', 'condo']
+const businessTypes = ['workers-comp', 'general-liability', 'commercial-auto', 'commercial-property', 'business-insurance', 'professional-liability']
+
+const getFilteredInsuranceTypes = (contractType: 'personal' | 'business') => {
+  return insuranceTypes.filter(type => 
+    contractType === 'personal' ? personalTypes.includes(type.key) : businessTypes.includes(type.key)
+  )
+}
+
 const getDisplayMessage = (value: unknown) => {
   if (typeof value === 'string') return value
   if (value instanceof Error) return value.message
@@ -178,9 +187,12 @@ export default function AdminContractsPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true)
 
+  const [contractType, setContractType] = useState<'personal' | 'business'>('business')
   const [contractNumber, setContractNumber] = useState('')
   const [policyNumber, setPolicyNumber] = useState('')
   const [contractDate, setContractDate] = useState('')
+  const [clientFirstName, setClientFirstName] = useState('')
+  const [clientLastName, setClientLastName] = useState('')
   const [clientCompanyName, setClientCompanyName] = useState('')
   const [clientAddress1, setClientAddress1] = useState('')
   const [clientAddress2, setClientAddress2] = useState('')
@@ -2027,6 +2039,17 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
               <h2 className="text-2xl font-bold text-white mb-6">Contract Information</h2>
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Contract Type</label>
+                  <select
+                    value={contractType}
+                    onChange={(e) => setContractType(e.target.value as 'personal' | 'business')}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="business">Business / Commercial</option>
+                    <option value="personal">Personal</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Contract Number</label>
                   <input
                     value={contractNumber}
@@ -2059,73 +2082,150 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
             {/* Client Information */}
             <div className="border-b border-slate-700 pb-8">
               <h2 className="text-2xl font-bold text-white mb-6">Client Information</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Company Name</label>
-                  <input
-                    value={clientCompanyName}
-                    onChange={(e) => setClientCompanyName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                    placeholder="Client Company LLC"
-                  />
+              
+              {/* Personal Contract Fields */}
+              {contractType === 'personal' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">First Name</label>
+                    <input
+                      value={clientFirstName}
+                      onChange={(e) => setClientFirstName(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      placeholder="John"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Last Name</label>
+                    <input
+                      value={clientLastName}
+                      onChange={(e) => setClientLastName(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      placeholder="Doe"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Address</label>
+                    <input
+                      value={clientAddress1}
+                      onChange={(e) => setClientAddress1(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      placeholder="123 Main St"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">City</label>
+                    <input
+                      value={clientCity}
+                      onChange={(e) => setClientCity(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">State</label>
+                    <input
+                      value={clientState}
+                      onChange={(e) => setClientState(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">ZIP</label>
+                    <input
+                      value={clientZip}
+                      onChange={(e) => setClientZip(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
+                    <input
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <input
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Address Line 1</label>
-                  <input
-                    value={clientAddress1}
-                    onChange={(e) => setClientAddress1(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
+              )}
+
+              {/* Business Contract Fields */}
+              {contractType === 'business' && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Company Name</label>
+                    <input
+                      value={clientCompanyName}
+                      onChange={(e) => setClientCompanyName(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                      placeholder="Client Company LLC"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Address Line 1</label>
+                    <input
+                      value={clientAddress1}
+                      onChange={(e) => setClientAddress1(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Address Line 2</label>
+                    <input
+                      value={clientAddress2}
+                      onChange={(e) => setClientAddress2(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">City</label>
+                    <input
+                      value={clientCity}
+                      onChange={(e) => setClientCity(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">State</label>
+                    <input
+                      value={clientState}
+                      onChange={(e) => setClientState(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">ZIP</label>
+                    <input
+                      value={clientZip}
+                      onChange={(e) => setClientZip(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
+                    <input
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <input
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Address Line 2</label>
-                  <input
-                    value={clientAddress2}
-                    onChange={(e) => setClientAddress2(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">City</label>
-                  <input
-                    value={clientCity}
-                    onChange={(e) => setClientCity(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">State</label>
-                  <input
-                    value={clientState}
-                    onChange={(e) => setClientState(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">ZIP</label>
-                  <input
-                    value={clientZip}
-                    onChange={(e) => setClientZip(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
-                  <input
-                    value={clientPhone}
-                    onChange={(e) => setClientPhone(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
-                  <input
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Payment Details */}
