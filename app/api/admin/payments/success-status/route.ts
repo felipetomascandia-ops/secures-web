@@ -33,11 +33,15 @@ export async function GET(req: Request) {
     const paymentQuery = await supabaseAdmin
       .from('payments')
       .select('*')
-      .or(`id.eq.${search},square_checkout_id.eq.${search},checkout_id.eq.${search},square_payment_id.eq.${search}`)
+      .or(`id.eq.${search},square_checkout_id.eq.${search}`)
       .single<Record<string, unknown>>()
 
     if (!paymentQuery.error && paymentQuery.data) {
       return NextResponse.json({ success: true, payment: paymentQuery.data })
+    }
+
+    if (paymentQuery.error) {
+      console.warn('payments lookup error', { search, error: paymentQuery.error })
     }
 
     const scheduleQuery = await supabaseAdmin
@@ -72,7 +76,7 @@ export async function GET(req: Request) {
     const squarePaymentQuery = await supabaseAdmin
       .from('square_payments')
       .select('*')
-      .or(`square_checkout_id.eq.${search},square_payment_id.eq.${search},id.eq.${search},checkout_id.eq.${search}`)
+      .or(`square_checkout_id.eq.${search},square_payment_id.eq.${search},id.eq.${search}`)
       .single<Record<string, unknown>>()
 
     if (!squarePaymentQuery.error && squarePaymentQuery.data) {

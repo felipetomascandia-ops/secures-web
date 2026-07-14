@@ -136,7 +136,11 @@ export async function POST(req: Request) {
 
     const { data, error } = await (supabaseAdmin as unknown as any)
       .from('payments')
-      .update({ square_checkout_id: checkoutId as string | null, square_url: checkoutUrl as string | null, status: 'pending' })
+      .update({
+        square_checkout_id: checkoutId as string | null,
+        square_url: checkoutUrl as string | null,
+        status: 'pending',
+      })
       .eq('id', paymentId)
       .select()
       .single()
