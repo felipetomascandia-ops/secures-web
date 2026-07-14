@@ -1613,102 +1613,92 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
             className="mb-8 max-w-4xl mx-auto" 
             style={{ pageBreakAfter: vehicleIndex < vehiclesList.length - 1 ? 'always' : 'avoid' }}
           >
-            {/* Header Section */}
-            <div className="flex justify-between items-start gap-4 border-b border-slate-800 pb-6 mb-6">
-              <div className="flex-1">
-                <h2 className="text-xl font-bold uppercase tracking-wide text-slate-800">Olimpo Coverage Group</h2>
-                <p className="text-sm mt-1 text-slate-700">Horsham PA, USA · (445) 325-0112 · contacto@olimpocoveragegroup.com</p>
-              </div>
-              <div className="text-right text-sm">
-                <strong className="block text-slate-800">Agreement #</strong>
-                <span className="font-semibold">{contractNumber || 'OCG-' + new Date().getFullYear() + '-' + Math.floor(Math.random() * 10000)}</span>
-                <br />
-                <strong className="block text-slate-800 mt-2">Date</strong>
-                <span>{contractDate || new Date().toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            {/* Main Card */}
-            <div className="flex gap-4 border-b border-dashed border-slate-400 pb-6 mb-6">
-              {/* Left Side */}
-              <div className="flex-1">
-                <h3 className="text-sm font-bold uppercase text-slate-800 mb-4">Pennsylvania Financial Responsibility Identification Card</h3>
-                <p className="text-xs text-slate-700 mb-4">This card must be shown to any Law Enforcement Officer upon request.</p>
-                <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Agency / Insurer Name</p>
-                <p className="font-semibold text-slate-900">Olimpo Coverage Group</p>
-                <p className="text-xs mt-1 text-slate-700">To report a claim call: (445) 325-0112</p>
-                <p className="text-xs font-semibold uppercase text-slate-800 mt-3">NOT VALID MORE THAN 1 YEAR FROM EFFECTIVE DATE</p>
-                <div className="mt-4">
-                  <p className="text-xs font-semibold text-slate-700">Policy #:</p>
-                  <p className="font-semibold">{coverage.policyNumber}</p>
-                  <p className="text-xs font-semibold text-slate-700 mt-1">Policy Period:</p>
-                  <p className="font-semibold">{coverage.effectiveDate} - {coverage.expirationDate || 'N/A'}</p>
-                </div>
-                <div className="mt-6">
-                  <p className="text-xs font-semibold text-slate-700 mb-1">Insured:</p>
-                  <p className="font-semibold">{coverage.insuredName || clientCompanyName}</p>
-                  <p className="text-sm text-slate-700">{clientAddress1}</p>
-                  {clientAddress2 && <p className="text-sm text-slate-700">{clientAddress2}</p>}
-                  <p className="text-sm text-slate-700">{clientCity}, {clientState} {clientZip}</p>
-                </div>
-                <div className="mt-6">
-                  <p className="text-xs font-semibold text-slate-700 mb-2">Your Agent: Olimpo Coverage Group at (445) 325-0112</p>
-                  <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Applicable with respect to the following motor vehicles:</p>
-                  <div className="grid grid-cols-4 gap-2 text-xs">
-                    <div>
-                      <span className="font-semibold text-slate-700">Year</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-700">Make</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-700">Model</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-700">Vehicle Identification</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-xs mt-1">
-                    <div>{v.year || ''}</div>
-                    <div>{v.make || ''}</div>
-                    <div>{v.model || ''}</div>
-                    <div className="font-mono">{v.vin || ''}</div>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <p className="text-xs font-semibold text-slate-800">SEE IMPORTANT MESSAGE ON REVERSE SIDE</p>
-                </div>
-                <div className="mt-4">
-                  <svg width="100" height="50" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 15 C30 5 70 5 90 15" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5 25 C20 10 40 40 60 20 C80 0 95 35 90 25" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10 30 C25 15 45 45 65 25 C85 5 90 40 85 30" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M15 10 L85 40" stroke="black" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
+            {/* Pennsylvania Financial Responsibility ID Card */}
+            <div className="border-2 border-slate-800 p-6 mb-6">
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-bold uppercase tracking-wide">PENNSYLVANIA FINANCIAL RESPONSIBILITY IDENTIFICATION CARD</h2>
               </div>
 
-              {/* Right Side */}
-              <div className="w-1/2 border-l border-dashed border-slate-400 pl-4">
-                <h3 className="text-sm font-bold text-slate-800 mb-4">THIS CARD MUST BE CARRIED FOR PRODUCTION UPON DEMAND. IT IS SUGGESTED THAT YOU CARRY THIS CARD IN THE INSURED VEHICLE.</h3>
-                <div className="mb-6">
-                  <p className="text-sm font-semibold text-red-700 uppercase">WARNING:</p>
-                  <p className="text-xs text-slate-800 mt-1">
-                    Any owner or registrant of a motor vehicle who drives or permits a motor vehicle to be driven in this State without the required financial responsibility may have his registration suspended or revoked.
-                  </p>
-                </div>
-                <div className="mb-6">
-                  <p className="text-xs font-semibold uppercase text-slate-800 mb-2">NOTE: THIS CARD IS REQUIRED WHEN:</p>
-                  <ul className="text-xs text-slate-800 list-disc pl-4 space-y-1">
-                    <li>You are involved in an auto accident.</li>
-                    <li>You are convicted of a traffic offense other than a parking offense that requires a court appearance.</li>
-                    <li>You are stopped for violating any provision of 75 Pa.C.S. relating to the Vehicle Code and requested to produce it by a police officer.</li>
-                  </ul>
-                </div>
+              <div className="grid grid-cols-2 gap-6 mb-4">
                 <div>
-                  <p className="text-xs text-slate-700">
-                    You must provide a copy of this card to the Department of Transportation when you request restoration of your operating privilege and/or registration privilege which has been previously suspended or revoked.
-                  </p>
+                  <p className="text-xs text-slate-600 mb-1">NAIC # 35173 AGENCY INSURANCE COMPANY OF MARYLAND, INC.</p>
+                  <p className="text-xs text-slate-600 mb-3">To report a claim call: (800) 841-5241</p>
+                  <p className="text-xs font-semibold uppercase text-slate-800 mb-2">NOT VALID MORE THAN 1 YEAR FROM EFFECTIVE DATE</p>
+                  <div className="mb-2">
+                    <span className="text-xs font-semibold">Policy #: </span>
+                    <span className="text-sm font-bold">{coverage.policyNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold">Policy Period: </span>
+                    <span className="text-sm">{coverage.effectiveDate} - {coverage.expirationDate || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-slate-600">THIS CARD MUST BE CARRIED FOR PRODUCTION UPON DEMAND.</p>
+                  <p className="text-xs text-slate-600 mb-3">IT IS SUGGESTED THAT YOU CARRY THIS CARD IN THE INSURED VEHICLE.</p>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-300 pt-4 mb-4">
+                <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Insured:</p>
+                <p className="text-sm font-semibold">{coverage.insuredName || clientCompanyName}</p>
+                <p className="text-xs text-slate-700">{clientAddress1}</p>
+                {clientAddress2 && <p className="text-xs text-slate-700">{clientAddress2}</p>}
+                <p className="text-xs text-slate-700">{clientCity}, {clientState} {clientZip}</p>
+              </div>
+
+              <div className="border-t border-slate-300 pt-4 mb-4">
+                <p className="text-xs font-semibold uppercase text-slate-800 mb-2">Your Agent: GOLDEN MULTISERVICES at (610)433-3474</p>
+                <p className="text-xs font-semibold uppercase text-slate-800 mb-3">Applicable with respect to the following motor vehicles:</p>
+                <div className="grid grid-cols-4 gap-2 text-xs border border-slate-300 p-2">
+                  <div>
+                    <span className="font-bold text-slate-800">Year</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">Make</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">Model</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">Vehicle Identification</span>
+                  </div>
+                  <div className="font-mono">{v.year || ''}</div>
+                  <div>{v.make || ''}</div>
+                  <div>{v.model || ''}</div>
+                  <div className="font-mono">{v.vin || ''}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-300 pt-4 mb-4">
+                <p className="text-xs font-semibold text-slate-800">SEE IMPORTANT MESSAGE ON REVERSE SIDE</p>
+              </div>
+
+              <div className="border-t border-slate-300 pt-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase text-red-700 mb-2">WARNING:</p>
+                    <p className="text-xs text-slate-800 mb-3">
+                      Any owner or registrant of a motor vehicle who drives or permits a motor vehicle to be driven in this State without the required financial responsibility may have his registration suspended or revoked.
+                    </p>
+                    <p className="text-xs font-semibold uppercase text-slate-800 mb-2">NOTE: THIS CARD IS REQUIRED WHEN:</p>
+                    <ul className="text-xs text-slate-800 list-disc pl-4 space-y-1 mb-3">
+                      <li>You are involved in an auto accident.</li>
+                      <li>You are convicted of a traffic offense other than a parking offense that requires a court appearance.</li>
+                      <li>You are stopped for violating any provision of 75 Pa.C.S. (relating to the Vehicle Code) and requested to produce it by a police officer.</li>
+                    </ul>
+                    <p className="text-xs text-slate-700">
+                      You must provide a copy of this card to the Department of Transportation when you request restoration of your operating privilege and/or registration privilege which has been previously suspended or revoked.
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <svg width="100" height="50" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 15 C30 5 70 5 90 15" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M5 25 C20 10 40 40 60 20 C80 0 95 35 90 25" stroke="black" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10 30 C25 15 45 45 65 25 C85 5 90 40 85 30" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15 10 L85 40" stroke="black" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1717,7 +1707,7 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
             <div className="mt-6">
               <h3 className="text-sm font-bold uppercase text-slate-800 mb-3">Important Notice Regarding Your Financial Responsibility Identification Card</h3>
               <p className="text-sm text-slate-800 mb-3">
-                Agency / Insurer Name of MD, Inc. is required by Pennsylvania law to send you an I.D. card. The card shows that an insurance policy has been issued for the vehicle(s) described satisfying the financial responsibility requirements of the law.
+                Agency Insurance Company of MD, Inc. is required by Pennsylvania law to send you an I.D. card. The card shows that an insurance policy has been issued for the vehicle(s) described satisfying the financial responsibility requirements of the law.
               </p>
               <p className="text-sm text-slate-800 mb-3">
                 If you lose the card, contact your insurance company or agent for a replacement.
