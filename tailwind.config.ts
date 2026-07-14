@@ -9,10 +9,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#0f172a",
-        secondary: "#1e293b",
-        accent: "#3b82f6",
-        gold: "#f59e0b",
+        primary: "#f8fafc",
+        secondary: "#f1f5f9",
+        accent: "#2563eb",
+        gold: "#d97706",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

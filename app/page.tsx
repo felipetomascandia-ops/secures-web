@@ -28,173 +28,123 @@ const usStates = [
   { id: "WI", name: "Wisconsin" }, { id: "WY", name: "Wyoming" }
 ];
 
-// Employee count options
-const employeeCounts = [
-  "1-5", "6-10", "11-20", "21-50", "51-100", "101-250", "251-500", "501-1000", "1000+"
-];
+const employeeCounts = ["1-5", "6-10", "11-20", "21-50", "51-100", "101-250", "251-500", "501-1000", "1000+"];
 
-// What We Cover with detailed descriptions
 const whatWeCover = [
   {
     name: "Business Insurance",
     icon: "🏢",
-    description: "Comprehensive coverage that protects your business from common risks like property damage, liability claims, and business interruption, ensuring your operations continue smoothly.",
-    protections: [
-      "Property damage from fire, theft, or natural disasters",
-      "Liability claims from third parties",
-      "Business interruption due to covered events",
-      "Legal defense costs associated with covered claims"
-    ]
+    description: "Comprehensive coverage that protects your business from common risks like property damage, liability claims, and business interruption.",
+    protections: ["Property damage from fire, theft, or natural disasters", "Liability claims from third parties", "Business interruption due to covered events", "Legal defense costs associated with covered claims"]
   },
   {
     name: "General Liability Insurance",
     icon: "⚖️",
-    description: "Protects your business from claims of bodily injury, property damage, and personal or advertising injury that occur on your business premises or from your operations.",
-    protections: [
-      "Bodily injury to customers or third parties on your property",
-      "Property damage caused by your business operations",
-      "Personal injury claims like slander or libel",
-      "Advertising injury claims",
-      "Medical payments for minor injuries on your premises"
-    ]
+    description: "Protects your business from claims of bodily injury, property damage, and personal or advertising injury.",
+    protections: ["Bodily injury to customers on your property", "Property damage caused by operations", "Personal injury claims like slander", "Advertising injury claims", "Medical payments for minor injuries"]
   },
   {
     name: "Business Owner's Policy (BOP)",
     icon: "📦",
-    description: "A convenient package that combines general liability and commercial property insurance, typically at a lower cost than purchasing each policy separately, ideal for small to medium businesses.",
-    protections: [
-      "General liability coverage for bodily injury and property damage",
-      "Commercial property coverage for your building and contents",
-      "Business interruption insurance",
-      "Optional endorsements to customize your coverage",
-      "Simplified insurance management with one policy"
-    ]
+    description: "A convenient package combining general liability and commercial property insurance at a lower cost.",
+    protections: ["General liability coverage", "Commercial property coverage", "Business interruption insurance", "Optional endorsements", "Simplified insurance management"]
   },
   {
     name: "Workers' Compensation Insurance",
     icon: "👷",
-    description: "Provides benefits to employees who suffer work-related injuries or illnesses, covering medical expenses, lost wages, and rehabilitation costs, while protecting your business from lawsuits.",
-    protections: [
-      "Medical expenses for work-related injuries and illnesses",
-      "Lost wage replacement for employees unable to work",
-      "Rehabilitation costs for injured workers",
-      "Disability benefits",
-      "Death benefits to employee families"
-    ]
+    description: "Provides benefits to employees who suffer work-related injuries or illnesses.",
+    protections: ["Medical expenses for work-related injuries", "Lost wage replacement", "Rehabilitation costs", "Disability benefits", "Death benefits to families"]
   },
   {
     name: "Commercial Property Insurance",
     icon: "🏗️",
-    description: "Protects your business property, including buildings, equipment, inventory, and furniture, from damage or loss due to fire, theft, vandalism, natural disasters, and other covered perils.",
-    protections: [
-      "Building and structure protection",
-      "Business equipment and machinery",
-      "Inventory and stock",
-      "Furniture, fixtures, and supplies",
-      "Loss of income from covered property damage"
-    ]
+    description: "Protects your business property from damage or loss due to fire, theft, vandalism, and natural disasters.",
+    protections: ["Building and structure protection", "Business equipment and machinery", "Inventory and stock", "Furniture and supplies", "Loss of income from property damage"]
   },
   {
     name: "Commercial Auto Insurance",
     icon: "🚗",
-    description: "Covers vehicles used for business purposes, including company cars, trucks, and vans, protecting against accidents, damage, theft, and liability claims.",
-    protections: [
-      "Liability coverage for bodily injury and property damage",
-      "Collision coverage for your business vehicles",
-      "Comprehensive coverage for non-collision damage",
-      "Uninsured/underinsured motorist coverage",
-      "Medical payments coverage for employees"
-    ]
+    description: "Covers vehicles used for business purposes, protecting against accidents, damage, and liability claims.",
+    protections: ["Liability for bodily injury and property damage", "Collision coverage", "Comprehensive coverage", "Uninsured/underinsured motorist", "Medical payments for employees"]
   },
   {
     name: "Professional Liability Insurance",
     icon: "📋",
-    description: "Also known as errors and omissions insurance, this protects service-based businesses against claims of negligence, mistakes, or failure to perform professional services.",
-    protections: [
-      "Claims of professional negligence",
-      "Errors, mistakes, or omissions in service delivery",
-      "Failure to meet contractual obligations",
-      "Legal defense costs regardless of outcome",
-      "Settlements and judgments from covered claims"
-    ]
+    description: "Also known as errors and omissions insurance for service-based businesses.",
+    protections: ["Claims of professional negligence", "Errors and omissions in service delivery", "Failure to meet contractual obligations", "Legal defense costs", "Settlements and judgments"]
   },
   {
-    name: "Errors and Omissions (E&O) Insurance",
+    name: "Errors and Omissions (E&O)",
     icon: "📊",
-    description: "Specialized coverage for professionals and service providers, protecting against claims that your advice, services, or work caused financial harm to a client.",
-    protections: [
-      "Financial harm caused by your professional advice",
-      "Mistakes in professional services",
-      "Legal costs associated with defending claims",
-      "Settlements and damages awarded",
-      "Claims related to contract disputes"
-    ]
+    description: "Specialized coverage protecting against claims of financial harm from professional advice.",
+    protections: ["Financial harm from professional advice", "Mistakes in professional services", "Legal costs for defending claims", "Settlements and damages", "Contract dispute claims"]
   },
   {
     name: "Tools & Equipment Insurance",
     icon: "🛠️",
-    description: "Covers your tools, equipment, and business assets against damage, loss, or theft, whether on the job site, in transit, or at your business location.",
-    protections: [
-      "Tools and equipment on job sites",
-      "Equipment in transit or temporarily off-premises",
-      "Theft, damage, and accidental loss",
-      "Rented or leased equipment",
-      "Replacement costs for lost or damaged items"
-    ]
+    description: "Covers tools, equipment, and business assets against damage, loss, or theft.",
+    protections: ["Tools on job sites", "Equipment in transit", "Theft and accidental loss", "Rented or leased equipment", "Replacement costs"]
   },
   {
-    name: "Employment Practices Liability Insurance",
+    name: "Employment Practices Liability",
     icon: "👥",
-    description: "Protects your business against claims from employees alleging discrimination, harassment, wrongful termination, or other employment-related violations.",
-    protections: [
-      "Claims of discrimination (race, age, gender, etc.)",
-      "Wrongful termination claims",
-      "Sexual harassment allegations",
-      "Retaliation claims",
-      "Legal defense and settlement costs"
-    ]
+    description: "Protects against claims of discrimination, harassment, and wrongful termination.",
+    protections: ["Discrimination claims", "Wrongful termination", "Sexual harassment allegations", "Retaliation claims", "Legal defense and settlement"]
   }
 ];
 
-// Who We Cover
-const whoWeCover = [
-  "Construction",
-  "Contractors",
-  "Consultants",
-  "Cleaning",
-  "Retail",
-  "Food & Beverage",
-  "Sports & Fitness",
-  "Education",
-  "Arts & Entertainment",
-  "Beauty & Personal Care"
-];
+const whoWeCover = ["Construction", "Contractors", "Consultants", "Cleaning", "Retail", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care"];
 
-// Industry/Sector options (matches Who We Cover)
-const industries = [
-  "Construction", "Contractors", "Consultants", "Cleaning Services", "Retail & E-commerce", "Food & Beverage",
-  "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Other"
-];
+const industries = ["Construction", "Contractors", "Consultants", "Cleaning Services", "Retail & E-commerce", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Other"];
 
-// Annual income options
-const incomeRanges = [
-  "Less than $50,000", "$50,000 - $100,000", "$100,000 - $250,000",
-  "$250,000 - $500,000", "$500,000 - $1,000,000", "$1,000,000 - $5,000,000",
-  "More than $5,000,000"
-];
+const incomeRanges = ["Less than $50,000", "$50,000 - $100,000", "$100,000 - $250,000", "$250,000 - $500,000", "$500,000 - $1,000,000", "$1,000,000 - $5,000,000", "More than $5,000,000"];
 
 type CoverageItem = (typeof whatWeCover)[number]
 
+type Language = 'en' | 'es'
+
+const translations: Record<Language, {
+  nav: { products: string; support: string; about: string; contact: string; getQuote: string; signIn: string }
+  hero: { badge: string; title1: string; titleAccent: string; title2: string; subtitle: string; cta1: string; cta2: string }
+  stats: { years: string; clients: string; policies: string; support: string }
+  services: { label: string; title: string; subtitle: string }
+  about: { label: string; title: string; desc: string; years: string; item1: string; item2: string; item3: string; item4: string }
+  coverage: { label: string; title: string; subtitle: string; what: string; who: string }
+  contact: { label: string; title: string; subtitle: string; location: string; email: string; phone: string; companyInfo: string; companyName: string; contactPerson: string; industry: string; employees: string; lawsuits: string; income: string; additionalInfo: string; send: string; companyPlaceholder: string; namePlaceholder: string; emailPlaceholder: string; phonePlaceholder: string; infoPlaceholder: string; selectIndustry: string; selectState: string; selectEmployees: string; selectLawsuits: string; selectIncome: string; yes: string; no: string; state: string }
+  footer: { home: string; services: string; about: string; contact: string; rights: string }
+  coverageModal: { title: string }
+}> = {
+  en: {
+    nav: { products: 'Products', support: 'Support', about: 'About Us', contact: 'Contact', getQuote: 'Get a Quote', signIn: 'Sign In' },
+    hero: { badge: 'Trusted by 500+ Businesses', title1: 'Protect Your', titleAccent: 'Business', title2: 'With Confidence', subtitle: 'Comprehensive commercial insurance solutions tailored to safeguard your business assets and operations. Your trusted partner on Horsham PA, USA.', cta1: 'Request Quote', cta2: 'Explore Services' },
+    stats: { years: 'Years Experience', clients: 'Happy Clients', policies: 'Policies Issued', support: 'Support Available' },
+    services: { label: 'Our Services', title: 'Comprehensive Insurance Solutions', subtitle: 'Complete coverage options to protect every aspect of your business operations' },
+    about: { label: 'About Us', title: 'Your Trusted Insurance Partner', desc: 'With over 15 years of experience in the insurance industry, we are your reliable partner on Horsham PA, USA. We specialize in providing personalized insurance solutions for businesses of all sizes.', years: 'Years of Excellence', item1: 'Personalized consultation tailored to your business needs', item2: 'Competitive pricing with comprehensive coverage options', item3: '24/7 dedicated support team', item4: 'Fast and efficient claims processing' },
+    coverage: { label: 'Our Coverage', title: 'What We Cover & Who We Cover', subtitle: 'Comprehensive insurance solutions tailored for your specific industry and needs', what: 'What We Cover', who: 'Who We Cover' },
+    contact: { label: 'Request Your Quote', title: 'Get a Personalized Quote for Your Business', subtitle: 'Fill out the form and we will send you a quote tailored to your business needs', location: 'Horsham PA, USA', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Your Company Information', companyName: 'Company Name', contactPerson: 'Contact Person', industry: 'Industry/Sector', employees: 'Number of Employees', lawsuits: 'Have you been in civil lawsuits before?', income: 'Annual Company Income', additionalInfo: 'Additional Information', send: 'Send Quote via WhatsApp', companyPlaceholder: 'Your company name', namePlaceholder: 'Your full name', emailPlaceholder: 'email@company.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Tell us more about your needs...', selectIndustry: 'Select an industry', selectState: 'Select a state', selectEmployees: 'Select an option', selectLawsuits: 'Select an option', selectIncome: 'Select a range', yes: 'Yes', no: 'No', state: 'Location (State)' },
+    footer: { home: 'Home', services: 'Services', about: 'About', contact: 'Contact', rights: '© 2026 Olimpo Coverage Group. All rights reserved.' },
+    coverageModal: { title: 'What this coverage helps protect you from' }
+  },
+  es: {
+    nav: { products: 'Productos', support: 'Soporte', about: 'Sobre Nosotros', contact: 'Contacto', getQuote: 'Solicitar Cotización', signIn: 'Iniciar Sesión' },
+    hero: { badge: 'Confiado por 500+ Empresas', title1: 'Protege tu', titleAccent: 'Negocio', title2: 'Con Confianza', subtitle: 'Soluciones integrales de seguros comerciales diseñadas para proteger los activos y operaciones de tu empresa. Tu socio de confianza en Horsham PA, EE.UU.', cta1: 'Solicitar Cotización', cta2: 'Explorar Servicios' },
+    stats: { years: 'Años de Experiencia', clients: 'Clientes Satisfechos', policies: 'Pólizas Emitidas', support: 'Soporte Disponible' },
+    services: { label: 'Nuestros Servicios', title: 'Soluciones Integrales de Seguros', subtitle: 'Opciones de cobertura completa para proteger cada aspecto de tus operaciones comerciales' },
+    about: { label: 'Sobre Nosotros', title: 'Tu Socio de Confianza en Seguros', desc: 'Con más de 15 años de experiencia en la industria de seguros, somos tu socio confiable en Horsham PA, EE.UU. Nos especializamos en brindar soluciones de seguros personalizadas para empresas de todos los tamaños.', years: 'Años de Excelencia', item1: 'Consultoría personalizada según las necesidades de tu negocio', item2: 'Precios competitivos con opciones de cobertura integral', item3: 'Equipo de soporte dedicado 24/7', item4: 'Procesamiento rápido y eficiente de reclamos' },
+    coverage: { label: 'Nuestra Cobertura', title: 'Lo Que Cubrimos y a Quién Cubrimos', subtitle: 'Soluciones de seguros integrales adaptadas a tu industria y necesidades específicas', what: 'Lo Que Cubrimos', who: 'A Quién Cubrimos' },
+    contact: { label: 'Solicita tu Cotización', title: 'Obtén una Cotización Personalizada', subtitle: 'Completa el formulario y te enviaremos una cotización adaptada a las necesidades de tu negocio', location: 'Horsham PA, EE.UU.', email: 'contacto@olimpocoveragegroup.com', phone: '(445) 325-0112', companyInfo: 'Información de tu Empresa', companyName: 'Nombre de la Empresa', contactPerson: 'Persona de Contacto', industry: 'Industria/Sector', employees: 'Número de Empleados', lawsuits: '¿Ha tenido demandas civiles antes?', income: 'Ingreso Anual de la Empresa', additionalInfo: 'Información Adicional', send: 'Enviar Cotización por WhatsApp', companyPlaceholder: 'Nombre de tu empresa', namePlaceholder: 'Tu nombre completo', emailPlaceholder: 'email@empresa.com', phonePlaceholder: '(123) 456-7890', infoPlaceholder: 'Cuéntanos más sobre tus necesidades...', selectIndustry: 'Selecciona una industria', selectState: 'Selecciona un estado', selectEmployees: 'Selecciona una opción', selectLawsuits: 'Selecciona una opción', selectIncome: 'Selecciona un rango', yes: 'Sí', no: 'No', state: 'Ubicación (Estado)' },
+    footer: { home: 'Inicio', services: 'Servicios', about: 'Nosotros', contact: 'Contacto', rights: '© 2026 Olimpo Coverage Group. Todos los derechos reservados.' },
+    coverageModal: { title: 'Lo que esta cobertura ayuda a protegerte' }
+  }
+}
+
 export default function Home() {
   const { user } = useSupabase()
+  const [lang, setLang] = useState<Language>('en')
   const [activeSection, setActiveSection] = useState("home")
-  const [glowPosition, setGlowPosition] = useState({ left: 0, width: 0 })
-  const navRefs = {
-    home: useRef<HTMLAnchorElement>(null),
-    services: useRef<HTMLAnchorElement>(null),
-    about: useRef<HTMLAnchorElement>(null),
-    contact: useRef<HTMLAnchorElement>(null),
-  }
+  const [showProducts, setShowProducts] = useState(false)
+  const productsRef = useRef<HTMLDivElement>(null)
+  const t = translations[lang]
 
   const [selectedCoverage, setSelectedCoverage] = useState<CoverageItem | null>(null)
   const [isCoverageModalOpen, setIsCoverageModalOpen] = useState(false)
@@ -202,6 +152,7 @@ export default function Home() {
   const openCoverageModal = (coverage: CoverageItem) => {
     setSelectedCoverage(coverage)
     setIsCoverageModalOpen(true)
+    setShowProducts(false)
   }
 
   const closeCoverageModal = () => {
@@ -209,31 +160,17 @@ export default function Home() {
     setSelectedCoverage(null)
   }
 
-  // Quote form state
   const [quoteForm, setQuoteForm] = useState({
-    companyName: "",
-    contactName: "",
-    email: "",
-    phone: "",
-    industry: "",
-    state: "",
-    employees: "",
-    hasLawsuits: "",
-    annualIncome: "",
-    additionalInfo: ""
+    companyName: "", contactName: "", email: "", phone: "", industry: "", state: "", employees: "", hasLawsuits: "", annualIncome: "", additionalInfo: ""
   });
 
-  // Handle quote form input change
   const handleQuoteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setQuoteForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle quote form submission (WhatsApp)
   const handleQuoteSubmit = () => {
     const { companyName, contactName, email, phone, industry, state, employees, hasLawsuits, annualIncome, additionalInfo } = quoteForm;
-    
-    // Create pre-formatted message
     const message = encodeURIComponent(
       `*NEW QUOTE REQUEST*\n\n` +
       `*Company Information:*\n` +
@@ -249,17 +186,12 @@ export default function Home() {
       `Annual Income: ${annualIncome}\n\n` +
       `*Additional Information:*\n${additionalInfo || "N/A"}`
     );
-    
-    // Open WhatsApp with the pre-filled message
     window.open(`https://wa.me/14453250112?text=${message}`, "_blank");
   };
-
-
 
   useEffect(() => {
     const handleScroll = () => {
       const sections = ["home", "services", "about", "contact"]
-      
       for (const section of sections) {
         const element = document.getElementById(section)
         if (element) {
@@ -271,169 +203,158 @@ export default function Home() {
         }
       }
     }
-
     window.addEventListener("scroll", handleScroll)
     handleScroll()
-    
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const checkoutId =
-      params.get('checkoutId') ||
-      params.get('checkout_id') ||
-      params.get('payment_link_id') ||
-      params.get('paymentLinkId') ||
-      params.get('transactionId') ||
-      params.get('orderId') ||
-      null
-
+    const checkoutId = params.get('checkoutId') || params.get('checkout_id') || params.get('payment_link_id') || params.get('paymentLinkId') || params.get('transactionId') || params.get('orderId') || null
     if (checkoutId) {
       window.location.replace(`/admin/payments/success?checkoutId=${encodeURIComponent(checkoutId)}`)
     }
   }, [])
 
   useEffect(() => {
-    const targetRef = navRefs[activeSection as keyof typeof navRefs]
-    const updatePosition = () => {
-      if (targetRef.current) {
-        const rect = targetRef.current.getBoundingClientRect()
-        const parentRect = targetRef.current.parentElement?.getBoundingClientRect()
-        if (parentRect) {
-          setGlowPosition({
-            left: rect.left - parentRect.left - 16,
-            width: rect.width + 32
-          })
-        }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (productsRef.current && !productsRef.current.contains(e.target as Node)) {
+        setShowProducts(false)
       }
     }
-    
-    updatePosition()
-    window.addEventListener("resize", updatePosition)
-    
-    return () => window.removeEventListener("resize", updatePosition)
-  }, [activeSection])
-
-  const NavItem = ({ href, label, ref }: { href: string; label: string; ref: React.Ref<HTMLAnchorElement> }) => {
-    const sectionKey = href.replace("#", "")
-    const isActive = activeSection === sectionKey
-    
-    return (
-      <Link 
-        href={href} 
-        ref={ref}
-        className="relative px-6 py-8"
-      >
-        {!isActive && (
-          <div className="absolute inset-0 hover:bg-gradient-to-r from-slate-800/50 to-transparent transition-all"></div>
-        )}
-        <span className={`relative font-semibold uppercase text-[10px] tracking-[0.2em] transition-colors ${
-          isActive ? "text-amber-400" : "text-slate-300 hover:text-amber-400"
-        }`}>
-          {label}
-        </span>
-      </Link>
-    )
-  }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50">
-        <div className="max-w-[120rem] mx-auto px-6">
-          <div className="relative mt-6">
-            <div className="relative bg-gradient-to-r from-slate-900/98 via-slate-900/95 to-slate-900/98 backdrop-blur-xl border border-amber-500/30 rounded-lg shadow-2xl">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400/80 to-transparent"></div>
-              
-              <div className="flex items-center h-20">
-                <Link href="/" className="flex items-center px-8 border-r border-amber-500/20 h-full">
-                  <Image 
-                    src="/images/logo.png" 
-                    alt="Olimpo Coverage Group Logo" 
-                    width={60} 
-                    height={60} 
-                    className="mr-4"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-3xl font-serif font-bold text-white tracking-wide">OLIMPO</span>
-                    <span className="text-amber-400 text-[10px] uppercase tracking-[0.3em] font-semibold">Coverage Group</span>
-                  </div>
-                </Link>
-                
-                <div className="flex-1 flex items-center justify-center gap-1 px-4 relative">
-                  <div 
-                    className="absolute bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-transparent rounded-full blur-lg pointer-events-none transition-all duration-500 ease-out"
-                    style={{
-                      left: `${glowPosition.left}px`,
-                      width: `${glowPosition.width}px`,
-                      height: '100%',
-                      top: 0,
-                    }}
-                  />
-                  <NavItem href="#home" label="HOME" ref={navRefs.home} />
-                  <NavItem href="#services" label="SERVICES" ref={navRefs.services} />
-                  <NavItem href="#about" label="ABOUT US" ref={navRefs.about} />
-                  <NavItem href="#contact" label="CONTACT" ref={navRefs.contact} />
-                </div>
-                
-                <div className="flex items-center gap-6 border-l border-amber-500/20 pl-8 pr-8 h-full">
-                  <div className="flex flex-col items-end">
-                    <span className="text-amber-400 text-[9px] uppercase tracking-[0.2em] font-semibold">Toll Free</span>
-                    <span className="text-white font-semibold tracking-wide text-lg whitespace-nowrap">(445) 325-0112</span>
-                  </div>
-                  
-                  <Link href="#contact" className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-800 rounded-md blur opacity-60"></div>
-                    <div className="relative bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-slate-900 px-8 py-3 rounded-md font-bold uppercase text-[11px] tracking-[0.2em] border border-amber-400/40 shadow-xl hover:shadow-amber-500/50 transition-all">
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.617 1.718 10.308a1 1 0 01-.686 1.062 16.03 16.03 0 01-7.898 0 1 1 0 01-.686-1.062l1.718-10.31L3.945 6.5a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                        GET A QUOTE
-                      </span>
-                    </div>
-                  </Link>
-                  
-                  <AuthButton />
-                </div>
+      <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3">
+              <Image src="/images/logo.png" alt="Olimpo Coverage Group" width={50} height={50} className="rounded-lg" />
+              <div className="flex flex-col">
+                <span className="text-2xl font-serif font-bold text-gray-900 tracking-wide">OLIMPO</span>
+                <span className="text-blue-600 text-[10px] uppercase tracking-[0.3em] font-semibold">Coverage Group</span>
               </div>
+            </Link>
+
+            {/* Center Navigation */}
+            <div className="hidden lg:flex items-center gap-1">
+              {/* Products Dropdown */}
+              <div className="relative" ref={productsRef}>
+                <button
+                  onClick={() => setShowProducts(!showProducts)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    showProducts ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'
+                  }`}
+                >
+                  {t.nav.products}
+                  <svg className={`w-4 h-4 transition-transform ${showProducts ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showProducts && (
+                  <div className="absolute top-full left-0 mt-2 w-[600px] bg-white border border-gray-200 rounded-xl shadow-2xl p-4 grid grid-cols-2 gap-2">
+                    {whatWeCover.map((item) => (
+                      <button
+                        key={item.name}
+                        onClick={() => openCoverageModal(item)}
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-blue-50 transition-all text-left"
+                      >
+                        <span className="text-2xl">{item.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{item.name}</p>
+                          <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                    <div className="col-span-2 mt-2 pt-3 border-t border-gray-100">
+                      <Link
+                        href="#contact"
+                        onClick={() => setShowProducts(false)}
+                        className="block w-full text-center py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all"
+                      >
+                        {t.nav.getQuote}
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Link href="#about" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'about' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.about}</Link>
+              <Link href="#services" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'services' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.support}</Link>
+              <Link href="#contact" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'contact' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.contact}</Link>
+            </div>
+
+            {/* Right Side */}
+            <div className="flex items-center gap-3">
+              {/* Language Switcher */}
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setLang('en')}
+                  className={`px-3 py-2 text-xs font-semibold transition-all ${lang === 'en' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => setLang('es')}
+                  className={`px-3 py-2 text-xs font-semibold transition-all ${lang === 'es' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                >
+                  ES
+                </button>
+              </div>
+
+              {/* Get a Quote Button */}
+              <Link
+                href="#contact"
+                className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md shadow-blue-600/20"
+              >
+                {t.nav.getQuote}
+              </Link>
+
+              <AuthButton />
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-52 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section id="home" className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/fondo1.png"
             alt="Background"
             fill
-            className="object-cover opacity-60"
+            className="object-cover opacity-30"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/70 to-slate-900/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-white" />
         </div>
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center max-w-5xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-full px-4 py-2 mb-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-4 py-2 mb-8">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span className="text-sm text-slate-300">Trusted by 500+ Businesses</span>
+              <span className="text-sm text-blue-700 font-medium">{t.hero.badge}</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
-              Protect Your <span className="bg-gradient-to-r from-blue-500 to-amber-500 bg-clip-text text-transparent">Business</span> With Confidence
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight text-gray-900">
+              {t.hero.title1}{' '}
+              <span className="text-blue-600">{t.hero.titleAccent}</span>
+              {' '}{t.hero.title2}
             </h1>
-            <p className="text-xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive commercial insurance solutions tailored to safeguard your business assets and operations. Your trusted partner on Horsham PA, USA.
+            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+              {t.hero.subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-5 justify-center">
-              <Link href="#contact" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl shadow-blue-600/30">
-                Request Quote
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="#contact" className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl shadow-blue-600/30">
+                {t.hero.cta1}
               </Link>
-              <Link href="#services" className="border-2 border-slate-700 hover:border-amber-500 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all hover:bg-slate-800">
-                Explore Services
+              <Link href="#services" className="border-2 border-gray-300 hover:border-blue-500 text-gray-700 px-10 py-4 rounded-xl font-semibold text-lg transition-all hover:bg-white">
+                {t.hero.cta2}
               </Link>
             </div>
           </div>
@@ -441,20 +362,18 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800/30 border-y border-slate-800">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-y border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { number: "15+", label: "Years Experience" },
-              { number: "500+", label: "Happy Clients" },
-              { number: "10K+", label: "Policies Issued" },
-              { number: "24/7", label: "Support Available" },
+              { number: "15+", label: t.stats.years },
+              { number: "500+", label: t.stats.clients },
+              { number: "10K+", label: t.stats.policies },
+              { number: "24/7", label: t.stats.support },
             ].map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-amber-500 bg-clip-text text-transparent mb-2">
-                  {stat.number}
-                </div>
-                <p className="text-slate-400 font-medium">{stat.label}</p>
+                <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">{stat.number}</div>
+                <p className="text-gray-500 font-medium">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -464,66 +383,57 @@ export default function Home() {
       {/* Services Section */}
       <section id="services" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-blue-500 font-semibold tracking-wide uppercase text-sm">Our Services</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">Comprehensive Insurance Solutions</h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">Complete coverage options to protect every aspect of your business operations</p>
+          <div className="text-center mb-16">
+            <span className="text-blue-600 font-semibold tracking-wide uppercase text-sm">{t.services.label}</span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-4 text-gray-900">{t.services.title}</h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t.services.subtitle}</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: "⚖️", title: "General Liability", desc: "Protect your business against claims of property damage, bodily injury, and personal injury." },
               { icon: "🏢", title: "Commercial Property", desc: "Coverage for your building, equipment, inventory, and other physical assets." },
-              { icon: "🚗", title: "Commercial Auto", desc: "Protect your business vehicles and drivers from accidents, damage, and liability claims." },
-              { icon: "👷", title: "Workers' Comp", desc: "Provide medical benefits and wage replacement to employees injured during work." },
-              { icon: "📊", title: "Business Interruption", desc: "Coverage for lost income when your business operations are temporarily halted." },
-              { icon: "🛠️", title: "Tools & Equipment", desc: "Coverage for your tools, equipment, and business assets on and off the job site." },
+              { icon: "🚗", title: "Commercial Auto", desc: "Protect your business vehicles and drivers from accidents, damage, and liability." },
+              { icon: "👷", title: "Workers' Comp", desc: "Medical benefits and wage replacement to employees injured during work." },
+              { icon: "📊", title: "Business Interruption", desc: "Coverage for lost income when business operations are temporarily halted." },
+              { icon: "🛠️", title: "Tools & Equipment", desc: "Coverage for tools, equipment, and assets on and off the job site." },
             ].map((service, index) => (
-              <div key={index} className="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all group">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-600/20 to-amber-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">{service.icon}</span>
+              <div key={index} className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all group">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-2xl">{service.icon}</span>
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-white">{service.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{service.desc}</p>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">{service.title}</h3>
+                <p className="text-gray-500 leading-relaxed text-sm">{service.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-
-
       {/* About Section */}
-      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
+      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-y border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div className="order-2 md:order-1">
-              <span className="text-blue-500 font-semibold tracking-wide uppercase text-sm">About Us</span>
-              <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-8">Your Trusted Insurance Partner</h2>
-              <p className="text-slate-400 mb-8 text-lg leading-relaxed">
-                With over 15 years of experience in the insurance industry, we are your reliable partner on Horsham PA, USA. We specialize in providing personalized insurance solutions for businesses of all sizes.
-              </p>
-              <div className="space-y-5">
-                {[
-                  "Personalized consultation tailored to your business needs",
-                  "Competitive pricing with comprehensive coverage options",
-                  "24/7 dedicated support team",
-                  "Fast and efficient claims processing",
-                ].map((item, index) => (
+            <div>
+              <span className="text-blue-600 font-semibold tracking-wide uppercase text-sm">{t.about.label}</span>
+              <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6 text-gray-900">{t.about.title}</h2>
+              <p className="text-gray-600 mb-8 text-lg leading-relaxed">{t.about.desc}</p>
+              <div className="space-y-4">
+                {[t.about.item1, t.about.item2, t.about.item3, t.about.item4].map((item, index) => (
                   <div key={index} className="flex items-center">
-                    <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                       <span className="text-white text-sm font-bold">✓</span>
                     </div>
-                    <span className="text-slate-300">{item}</span>
+                    <span className="text-gray-700">{item}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="order-1 md:order-2">
-              <div className="bg-gradient-to-br from-blue-600 to-amber-500 p-1 rounded-3xl">
-                <div className="bg-slate-900 p-12 rounded-3xl">
+            <div>
+              <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-1 rounded-3xl shadow-xl">
+                <div className="bg-white p-12 rounded-3xl">
                   <div className="text-center">
-                    <div className="text-7xl font-bold text-white mb-4">15+</div>
-                    <p className="text-slate-300 text-lg">Years of Excellence</p>
+                    <div className="text-7xl font-bold text-blue-600 mb-4">15+</div>
+                    <p className="text-gray-600 text-lg">{t.about.years}</p>
                   </div>
                 </div>
               </div>
@@ -535,50 +445,46 @@ export default function Home() {
       {/* What We Cover & Who We Cover */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-amber-500 font-semibold tracking-wide uppercase text-sm">Our Coverage</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">What We Cover & Who We Cover</h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">Comprehensive insurance solutions tailored for your specific industry and needs</p>
+          <div className="text-center mb-16">
+            <span className="text-blue-600 font-semibold tracking-wide uppercase text-sm">{t.coverage.label}</span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-4 text-gray-900">{t.coverage.title}</h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t.coverage.subtitle}</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-8">
             {/* What We Cover */}
-            <div className="bg-slate-800/50 backdrop-blur-sm p-8 rounded-3xl border border-slate-700">
-              <h3 className="text-2xl font-bold text-white mb-8">What We Cover</h3>
-              <ul className="space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">{t.coverage.what}</h3>
+              <ul className="space-y-3">
                 {whatWeCover.map((item, index) => (
                   <li key={index}>
                     <button
                       type="button"
                       onClick={() => openCoverageModal(item)}
-                      className="w-full flex items-center gap-4 text-left p-3 rounded-2xl border border-transparent hover:border-amber-500/40 hover:bg-slate-900/30 transition-all"
+                      className="w-full flex items-center gap-3 text-left p-3 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-all"
                     >
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-600/20 to-amber-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">{item.icon}</span>
-                      </div>
+                      <span className="text-2xl">{item.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <span className="text-slate-200 text-lg font-semibold">{item.name}</span>
-                        <p className="text-slate-400 text-sm mt-1 line-clamp-1">{item.description}</p>
+                        <span className="text-gray-800 font-semibold">{item.name}</span>
+                        <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{item.description}</p>
                       </div>
-                      <div className="flex-shrink-0 text-slate-500">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
+                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
             {/* Who We Cover */}
-            <div className="bg-slate-800/50 backdrop-blur-sm p-8 rounded-3xl border border-slate-700">
-              <h3 className="text-2xl font-bold text-white mb-8">Who We Cover</h3>
-              <ul className="space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">{t.coverage.who}</h3>
+              <ul className="space-y-3">
                 {whoWeCover.map((item, index) => (
-                  <li key={index} className="flex items-center gap-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/20 to-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-500 text-lg">✓</span>
+                  <li key={index} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
+                    <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-lg">✓</span>
                     </div>
-                    <span className="text-slate-300 text-lg">{item}</span>
+                    <span className="text-gray-700">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -588,201 +494,124 @@ export default function Home() {
       </section>
 
       {/* Quote Request Section */}
-      <section id="contact" className="py-24 px-4 sm:px-6 lg:px-8">
+      <section id="contact" className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-amber-500 font-semibold tracking-wide uppercase text-sm">Request Your Quote</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6 text-white">Get a Personalized Quote for Your Business</h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">Fill out the form and we will send you a quote tailored to your business needs</p>
+          <div className="text-center mb-16">
+            <span className="text-blue-600 font-semibold tracking-wide uppercase text-sm">{t.contact.label}</span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-4 text-gray-900">{t.contact.title}</h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t.contact.subtitle}</p>
           </div>
-          
-          <div className="grid lg:grid-cols-5 gap-12">
-            <div className="lg:col-span-2 space-y-8">
+
+          <div className="grid lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-2 space-y-6">
               {[
-                { icon: "📍", title: "Location", content: "Horsham PA, USA" },
-                { icon: "📧", title: "Email", content: "contacto@olimpocoveragegroup.com" },
-                { icon: "📞", title: "Phone", content: "(445) 325-0112" },
+                { icon: "📍", title: t.contact.location, content: "Horsham PA, USA" },
+                { icon: "📧", title: t.contact.email, content: "contacto@olimpocoveragegroup.com" },
+                { icon: "📞", title: t.contact.phone, content: "(445) 325-0112" },
               ].map((item, index) => (
-                <div key={index} className="flex items-start gap-6 p-6 bg-slate-800/50 rounded-2xl border border-slate-700">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-600/20 to-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">{item.icon}</span>
+                <div key={index} className="flex items-start gap-4 p-5 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">{item.icon}</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white mb-1">{item.title}</h4>
-                    <p className="text-slate-400">{item.content}</p>
+                    <h4 className="font-semibold text-gray-900 mb-0.5">{item.title}</h4>
+                    <p className="text-gray-600 text-sm">{item.content}</p>
                   </div>
                 </div>
               ))}
             </div>
-            
+
             <div className="lg:col-span-3">
-              <div className="bg-slate-800/50 backdrop-blur-sm p-8 rounded-3xl border border-slate-700 space-y-6">
-                <h3 className="text-2xl font-bold text-white mb-6">Your Company Information</h3>
-                
-                {/* Company & Contact Info */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Company Name</label>
-                    <input
-                      type="text"
-                      name="companyName"
-                      value={quoteForm.companyName}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      placeholder="Your company name"
-                      required
-                    />
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">{t.contact.companyInfo}</h3>
+
+                <div className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.companyName}</label>
+                      <input type="text" name="companyName" value={quoteForm.companyName} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" placeholder={t.contact.companyPlaceholder} required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.contactPerson}</label>
+                      <input type="text" name="contactName" value={quoteForm.contactName} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" placeholder={t.contact.namePlaceholder} required />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Contact Person</label>
-                    <input
-                      type="text"
-                      name="contactName"
-                      value={quoteForm.contactName}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      placeholder="Your full name"
-                      required
-                    />
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                      <input type="email" name="email" value={quoteForm.email} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" placeholder={t.contact.emailPlaceholder} required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.phone}</label>
+                      <input type="tel" name="phone" value={quoteForm.phone} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" placeholder={t.contact.phonePlaceholder} required />
+                    </div>
                   </div>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={quoteForm.email}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      placeholder="email@company.com"
-                      required
-                    />
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.industry}</label>
+                      <select name="industry" value={quoteForm.industry} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" required>
+                        <option value="">{t.contact.selectIndustry}</option>
+                        {industries.map((ind) => (<option key={ind} value={ind}>{ind}</option>))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.state}</label>
+                      <select name="state" value={quoteForm.state} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" required>
+                        <option value="">{t.contact.selectState}</option>
+                        {usStates.map((state) => (<option key={state.id} value={state.id}>{state.name}</option>))}
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={quoteForm.phone}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      placeholder="(123) 456-7890"
-                      required
-                    />
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.employees}</label>
+                      <select name="employees" value={quoteForm.employees} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" required>
+                        <option value="">{t.contact.selectEmployees}</option>
+                        {employeeCounts.map((count) => (<option key={count} value={count}>{count}</option>))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.lawsuits}</label>
+                      <select name="hasLawsuits" value={quoteForm.hasLawsuits} onChange={handleQuoteInputChange}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" required>
+                        <option value="">{t.contact.selectLawsuits}</option>
+                        <option value="Yes">{t.contact.yes}</option>
+                        <option value="No">{t.contact.no}</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Industry & Location */}
-                <div className="grid md:grid-cols-2 gap-6">
+
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Industry/Sector</label>
-                    <select
-                      name="industry"
-                      value={quoteForm.industry}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      required
-                    >
-                      <option value="">Select an industry</option>
-                      {industries.map((ind) => (
-                        <option key={ind} value={ind}>{ind}</option>
-                      ))}
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.income}</label>
+                    <select name="annualIncome" value={quoteForm.annualIncome} onChange={handleQuoteInputChange}
+                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors" required>
+                      <option value="">{t.contact.selectIncome}</option>
+                      {incomeRanges.map((range) => (<option key={range} value={range}>{range}</option>))}
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Location (State)</label>
-                    <select
-                      name="state"
-                      value={quoteForm.state}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      required
-                    >
-                      <option value="">Select a state</option>
-                      {usStates.map((state) => (
-                        <option key={state.id} value={state.id}>{state.name}</option>
-                      ))}
-                    </select>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t.contact.additionalInfo}</label>
+                    <textarea name="additionalInfo" rows={3} value={quoteForm.additionalInfo} onChange={handleQuoteInputChange}
+                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 transition-colors resize-none" placeholder={t.contact.infoPlaceholder} />
                   </div>
-                </div>
-                
-                {/* Employees & Lawsuits */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Number of Employees</label>
-                    <select
-                      name="employees"
-                      value={quoteForm.employees}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      required
-                    >
-                      <option value="">Select an option</option>
-                      {employeeCounts.map((count) => (
-                        <option key={count} value={count}>{count}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Have you been in civil lawsuits before?</label>
-                    <select
-                      name="hasLawsuits"
-                      value={quoteForm.hasLawsuits}
-                      onChange={handleQuoteInputChange}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      required
-                    >
-                      <option value="">Select an option</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </div>
-                </div>
-                
-                {/* Annual Income */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Annual Company Income</label>
-                  <select
-                    name="annualIncome"
-                    value={quoteForm.annualIncome}
-                    onChange={handleQuoteInputChange}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors"
-                    required
-                  >
-                    <option value="">Select a range</option>
-                    {incomeRanges.map((range) => (
-                      <option key={range} value={range}>{range}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Additional Info */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Additional Information</label>
-                  <textarea
-                    name="additionalInfo"
-                    rows={4}
-                    value={quoteForm.additionalInfo}
-                    onChange={handleQuoteInputChange}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-amber-500 transition-colors resize-none"
-                    placeholder="Tell us more about your company's needs..."
-                  />
-                </div>
-                
-                {/* Submit Button */}
-                <div className="pt-4">
-                  <button
-                    type="button"
-                    onClick={handleQuoteSubmit}
-                    className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-slate-900 px-8 py-5 rounded-xl font-bold text-lg transition-all shadow-xl shadow-amber-600/30 flex items-center justify-center gap-3"
-                  >
-                    <span className="text-2xl">💬</span>
-                    Send Quote via WhatsApp
+
+                  <button type="button" onClick={handleQuoteSubmit}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-3">
+                    <span className="text-xl">💬</span>
+                    {t.contact.send}
                   </button>
                 </div>
-                
               </div>
             </div>
           </div>
@@ -790,69 +619,58 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800 bg-slate-900">
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center">
-              <Image src="/images/logo.png" alt="Olimpo Coverage Group Logo" width={70} height={70} className="mr-6" />
+            <div className="flex items-center gap-4">
+              <Image src="/images/logo.png" alt="Olimpo Coverage Group" width={50} height={50} className="rounded-lg" />
               <div>
-                <span className="text-4xl font-serif font-bold text-white tracking-wide">OLIMPO</span>
-                <span className="text-amber-400 text-[11px] uppercase tracking-[0.3em] font-semibold block">Coverage Group</span>
+                <span className="text-2xl font-serif font-bold text-gray-900 tracking-wide">OLIMPO</span>
+                <span className="text-blue-600 text-[10px] uppercase tracking-[0.3em] font-semibold block">Coverage Group</span>
               </div>
             </div>
-            <div className="flex gap-8">
-              <Link href="#home" className="text-slate-400 hover:text-white transition-colors">Home</Link>
-              <Link href="#services" className="text-slate-400 hover:text-white transition-colors">Services</Link>
-              <Link href="#about" className="text-slate-400 hover:text-white transition-colors">About</Link>
-              <Link href="#contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link>
+            <div className="flex gap-6">
+              <Link href="#home" className="text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium">{t.footer.home}</Link>
+              <Link href="#services" className="text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium">{t.footer.services}</Link>
+              <Link href="#about" className="text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium">{t.footer.about}</Link>
+              <Link href="#contact" className="text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium">{t.footer.contact}</Link>
             </div>
-            <p className="text-slate-500 text-sm">
-              © 2026 Olimpo Coverage Group. All rights reserved.
-            </p>
+            <p className="text-gray-400 text-sm">{t.footer.rights}</p>
           </div>
         </div>
       </footer>
 
+      {/* Coverage Modal */}
       {isCoverageModalOpen && selectedCoverage && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={closeCoverageModal}
-        >
-          <div
-            className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-slate-800 flex items-start justify-between gap-6">
-              <div className="flex items-start gap-4 min-w-0">
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-600/20 to-amber-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-3xl">{selectedCoverage.icon}</span>
+        <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={closeCoverageModal}>
+          <div className="w-full max-w-lg bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-gray-100 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">{selectedCoverage.icon}</span>
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-2xl font-bold text-white">{selectedCoverage.name}</h3>
-                  <p className="text-slate-400 mt-1">{selectedCoverage.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900">{selectedCoverage.name}</h3>
+                  <p className="text-gray-500 text-sm mt-0.5">{selectedCoverage.description}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={closeCoverageModal}
-                className="flex-shrink-0 w-10 h-10 rounded-xl border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button type="button" onClick={closeCoverageModal}
+                className="flex-shrink-0 w-8 h-8 rounded-lg border border-gray-200 hover:border-gray-400 text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center"
+                aria-label="Close">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-
-            <div className="p-6">
-              <h4 className="text-lg font-semibold text-white mb-4">What this coverage helps protect you from</h4>
-              <ul className="space-y-3">
+            <div className="p-5">
+              <h4 className="text-base font-semibold text-gray-800 mb-4">{t.coverageModal.title}</h4>
+              <ul className="space-y-2.5">
                 {selectedCoverage.protections.map((p) => (
                   <li key={p} className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-amber-500/15 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-amber-400 text-sm">✓</span>
+                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-blue-600 text-xs">✓</span>
                     </div>
-                    <span className="text-slate-300">{p}</span>
+                    <span className="text-gray-600 text-sm">{p}</span>
                   </li>
                 ))}
               </ul>
