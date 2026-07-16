@@ -503,7 +503,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     
-    const { data: contract, error: contractError } = await (supabaseAdmin as unknown as any).from('contracts').select('*').eq('id', id).single() as { data: Record<string, unknown> | null; error: unknown }
+    const contractQuery: any = await (supabaseAdmin as any).from('contracts').select('*').eq('id', id).single()
+    const contract: Record<string, unknown> | null = contractQuery.data
+    const contractError = contractQuery.error
 
     console.log('Document route: Contract data', { contractId: id, contract, contractError })
 
@@ -512,7 +514,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     // Obtener coberturas de la tabla 'coverages' asociadas a este contrato
-    const { data: coveragesData, error: coveragesError } = await supabaseAdmin
+    const { data: coveragesData, error: coveragesError } = await (supabaseAdmin as unknown as any)
       .from('coverages')
       .select('*')
       .eq('contract_id', id)
