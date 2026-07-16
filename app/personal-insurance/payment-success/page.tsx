@@ -88,7 +88,7 @@ export default function PaymentSuccessPage() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Puedes acceder a todos tus documentos en "Mi Panel".</span>
+                  <span>Puedes acceder a todos tus documentos en &ldquo;Mi Panel&rdquo;.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
