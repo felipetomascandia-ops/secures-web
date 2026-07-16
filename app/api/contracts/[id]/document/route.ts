@@ -26,8 +26,14 @@ const getInsuranceTypeLabel = (typeKey: string | undefined) => {
     { key: 'general-liability', name: 'General Liability Insurance' },
     { key: 'commercial-auto', name: 'Commercial Auto Insurance' },
     { key: 'commercial-property', name: 'Commercial Property Insurance' },
+    { key: 'personal-auto', name: 'Personal Auto Insurance' },
+    { key: 'motorcycle', name: 'Motorcycle Insurance' },
+    { key: 'pet', name: 'Pet Insurance' },
+    { key: 'mobile-device', name: 'Mobile Device Insurance' },
+    { key: 'event', name: 'Event Insurance' },
+    { key: 'bicycle', name: 'Bicycle Insurance' },
   ]
-  return insuranceTypes.find((type) => type.key === typeKey)?.name || 'Insurance Premium Finance Agreement'
+  return insuranceTypes.find((type) => type.key === typeKey)?.name || 'Personal Insurance Agreement'
 }
 
 const generateCoverageDetailsHTML = (coverage: Record<string, unknown>) => {
@@ -90,6 +96,18 @@ const generateCoverageDetailsHTML = (coverage: Record<string, unknown>) => {
             <tr><td style="padding:8px;">Deductible</td><td style="padding:8px;">${formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}</td></tr>
           </tbody>
         </table>
+      </div>
+    `
+  }
+
+  // Para seguros personales, mostrar detalles de cobertura
+  if (coverage.coverage_details) {
+    return `
+      <div style="margin-bottom: 18px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px;">
+        <strong style="display:block; margin-bottom:10px; font-size:14px;">${getInsuranceTypeLabel(insuranceType)} Coverage Details</strong>
+        <p style="margin:0; font-size:12px; line-height: 1.6;">${coverage.coverage_details}</p>
+        ${coverage.deductible ? `<p style="margin:8px 0 0 0; font-size:12px;"><strong>Deductible:</strong> ${formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}</p>` : ''}
+        ${coverage.coverage_limit ? `<p style="margin:4px 0 0 0; font-size:12px;"><strong>Coverage Limit:</strong> ${formatCurrencyDisplay(parseCurrencyValue(coverage.coverage_limit))}</p>` : ''}
       </div>
     `
   }
@@ -331,15 +349,23 @@ const generateContractPDF = (contract: Record<string, unknown>, coverages: Recor
                 <tr>
                   <th>Coverage Type</th>
                   <th>Policy #</th>
-                  <th>Effective</th>
-                  <th>Expires</th>
-                  <th>Each Occurrence</th>
-                  <th>General Aggregate</th>
+                  <th>Effective Date</th>
+                  <th>Expiration Date</th>
                   <th>Deductible</th>
+                  <th>Coverage Limit</th>
                 </tr>
               </thead>
               <tbody>
-                ${coverageRows}
+                ${coverages.map((coverage) => `
+                  <tr>
+                    <td>${getInsuranceTypeLabel(coverage.insurance_type as string)}</td>
+                    <td>${(coverage.policy_number as string | undefined) || ''}</td>
+                    <td>${(coverage.effective_date as string | undefined) || ''}</td>
+                    <td>${(coverage.expiration_date as string | undefined) || 'N/A'}</td>
+                    <td>${formatCurrencyDisplay(parseCurrencyValue(coverage.deductible))}</td>
+                    <td>${formatCurrencyDisplay(parseCurrencyValue(coverage.coverage_limit))}</td>
+                  </tr>
+                `).join('')}
               </tbody>
             </table>
             ` : `<p>No coverages listed.</p>`}
@@ -477,16 +503,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     
-    const [{ data: contract, error: contractError }, { data: coverages, error: coveragesError }] = await Promise.all([
-      supabaseAdmin.from('contracts').select('*').eq('id', id).single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
-      supabaseAdmin.from('coverages').select('*').eq('contract_id', id) as unknown as Promise<{ data: Record<string, unknown>[] | null; error: unknown }>,
-    ])
+    const { data: contract, error: contractError } = await supabaseAdmin.from('contracts').select('*').eq('id', id).single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>
+
+    console.log('Document route: Contract data', { contractId: id, contract, contractError })
 
     if (contractError || !contract) {
       return NextResponse.json({ success: false, message: 'Contract not found' }, { status: 404 })
     }
 
-    const html = generateContractPDF(contract, coverages || [])
+    // Obtener coberturas de la tabla 'coverages' asociadas a este contrato
+    const { data: coveragesData, error: coveragesError } = await supabaseAdmin
+      .from('coverages')
+      .select('*')
+      .eq('contract_id', id)
+    
+    console.log('Document route: Coverages from DB', { coveragesCount: coveragesData?.length || 0, coverages: coveragesData, coveragesError })
+    
+    const coverages = (coveragesData as Record<string, unknown>[] | null) || []
+
+    const html = generateContractPDF(contract, coverages)
 
     return new Response(html, {
       headers: {

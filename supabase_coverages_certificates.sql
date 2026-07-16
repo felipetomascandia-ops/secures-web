@@ -42,8 +42,16 @@ CREATE TABLE IF NOT EXISTS public.coverages (
   
   -- Certificate Holder
   certificate_holder_name TEXT,
-  certificate_holder_address TEXT
+  certificate_holder_address TEXT,
+
+  -- Personal Insurance fields (added for self-service contracts)
+  coverage_details TEXT,
+  coverage_limit NUMERIC
 );
+
+-- Add columns if table already exists
+ALTER TABLE public.coverages ADD COLUMN IF NOT EXISTS coverage_details TEXT;
+ALTER TABLE public.coverages ADD COLUMN IF NOT EXISTS coverage_limit NUMERIC;
 
 -- Certificates table to store generated certificates (PDFs or URLs)
 CREATE TABLE IF NOT EXISTS public.certificates (
