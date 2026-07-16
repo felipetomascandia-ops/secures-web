@@ -440,6 +440,8 @@ const translations: Record<Language, {
   state: string
   zip: string
   needAccount: string
+  optional: string
+  fillRequired: string
   register: string
   login: string
   drawSignature: string
