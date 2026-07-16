@@ -275,6 +275,9 @@ export default function Home() {
 
               <Link href="#about" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'about' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.about}</Link>
               <Link href="#services" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'services' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.support}</Link>
+              <Link href="/personal-insurance" className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
+                Seguro Personal
+              </Link>
               <Link href="#contact" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'contact' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.contact}</Link>
             </div>
 

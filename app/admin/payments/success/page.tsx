@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface Payment {
   id: string
@@ -21,6 +22,7 @@ interface Payment {
 }
 
 export default function PaymentSuccessPage() {
+  const router = useRouter()
   const [payment, setPayment] = useState<Payment | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [message, setMessage] = useState('Checking payment status...')
@@ -47,8 +49,7 @@ export default function PaymentSuccessPage() {
       : null
 
     if (!query) {
-      setStatus('ready')
-      setMessage('Your payment was completed successfully. If you want to check status, return to the payments list.')
+      router.replace('/admin/payments')
       return
     }
 
@@ -56,16 +57,14 @@ export default function PaymentSuccessPage() {
       .then(res => res.json())
       .then(json => {
         if (!json.success) {
-          setStatus('error')
-          setMessage(json.message || 'No payment record found.')
+          router.replace('/admin/payments')
           return
         }
         setPayment(json.payment)
         setStatus('ready')
       })
       .catch(err => {
-        setStatus('error')
-        setMessage(err?.message || 'Request failed.')
+        router.replace('/admin/payments')
       })
   }, [])
 

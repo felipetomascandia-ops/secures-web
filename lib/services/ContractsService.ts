@@ -30,6 +30,7 @@ const buildContractPayload = (contractData: any, createdBy?: string) => {
     policyStatus,
     expirationDate,
     financeChargePercent = 0,
+    coverages = [],
   } = contractData
 
   const today = new Date().toISOString().slice(0, 10)
@@ -79,6 +80,7 @@ const buildContractPayload = (contractData: any, createdBy?: string) => {
     finance_charge: financeCharge,
     amount_financed: amountFinanced,
     finance_charge_percent: parseNumber(financeChargePercent),
+    coverages: coverages.length > 0 ? coverages : null,
   }
 }
 
@@ -138,6 +140,8 @@ const buildCoveragePayload = (coverage: any, contractId: string) => {
     policy_number: coverage.policyNumber,
     effective_date: coverage.effectiveDate,
     expiration_date: coverage.expirationDate,
+    coverage_details: coverage.coverageDetails || null,
+    coverage_limit: parseNumber(coverage.coverageLimit),
     each_occurrence: parseNumber(coverage.eachOccurrence),
     damage_to_rented_premises: parseNumber(coverage.damageToRentedPremises),
     med_exp: parseNumber(coverage.medExp),
@@ -188,6 +192,7 @@ export class ContractsService {
 
   static async createContractWithSchedule(contractData: any, createdBy?: string) {
     console.log('ContractsService: Creating contract with data', contractData)
+    console.log('ContractsService: Coverages received', { coverages: contractData.coverages, coveragesCount: contractData.coverages?.length })
     const { contractNumber, policyNumber, clientName, clientCompanyName, clientEmail, clientPhone, totalPremium, downPayment, monthlyPayment, numberOfPayments, firstDueDate, terms, sendToClient, coverages = [], vehicles = [] } = contractData
     
     // Generate policy number if not provided
@@ -276,21 +281,55 @@ export class ContractsService {
 
     // Insert coverages
     const createdCoverages: any[] = []
-    for (const coverage of coverages) {
-      const coveragePayload = buildCoveragePayload({ ...coverage, policyNumber: finalPolicyNumber }, contractId)
-      const { data: covData, error: covError } = await (db as unknown as any).from('coverages').insert(coveragePayload).select().single()
-      if (!covError && covData) {
+    console.log('ContractsService: Inserting coverages', { coveragesCount: coverages.length, coverages })
+    
+    if (coverages.length === 0) {
+      console.warn('ContractsService: WARNING - No coverages to insert!')
+    }
+    
+    for (let i = 0; i < coverages.length; i++) {
+      const coverage = coverages[i]
+      try {
+        const coveragePayload = buildCoveragePayload({ ...coverage, policyNumber: finalPolicyNumber }, contractId)
+        console.log(`ContractsService: Coverage ${i + 1}/${coverages.length} payload`, coveragePayload)
+        
+        const { data: covData, error: covError } = await (db as unknown as any).from('coverages').insert(coveragePayload).select().single()
+        
+        console.log(`ContractsService: Coverage ${i + 1}/${coverages.length} insert result`, { data: covData, error: covError })
+        
+        if (covError) {
+          console.error(`ContractsService: Error inserting coverage ${i + 1}:`, covError)
+          continue
+        }
+        
+        if (!covData) {
+          console.warn(`ContractsService: No data returned for coverage ${i + 1}`)
+          continue
+        }
+        
         createdCoverages.push(covData)
+        console.log(`ContractsService: Coverage ${i + 1} created successfully with ID:`, covData.id)
+        
         // Create certificate entry for each coverage
         const certificateUrl = `${baseUrl}/api/contracts/${contractId}/certificate/${covData.id}`
-        await (db as unknown as any).from('certificates').insert({
+        const { error: certError } = await (db as unknown as any).from('certificates').insert({
           contract_id: contractId,
           coverage_id: covData.id,
           certificate_type: coverage.insuranceType,
           certificate_url: certificateUrl,
         })
+        
+        if (certError) {
+          console.error(`ContractsService: Error creating certificate for coverage ${i + 1}:`, certError)
+        } else {
+          console.log(`ContractsService: Certificate created for coverage ${i + 1}`)
+        }
+      } catch (err) {
+        console.error(`ContractsService: Exception inserting coverage ${i + 1}:`, err)
       }
     }
+    
+    console.log('ContractsService: Total created coverages', createdCoverages.length)
 
     // Update contract with certificate_url (if we have at least one certificate)
     if (createdCoverages.length > 0) {
