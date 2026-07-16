@@ -30,7 +30,6 @@ const buildContractPayload = (contractData: any, createdBy?: string) => {
     policyStatus,
     expirationDate,
     financeChargePercent = 0,
-    coverages = [],
   } = contractData
 
   const today = new Date().toISOString().slice(0, 10)
@@ -80,7 +79,6 @@ const buildContractPayload = (contractData: any, createdBy?: string) => {
     finance_charge: financeCharge,
     amount_financed: amountFinanced,
     finance_charge_percent: parseNumber(financeChargePercent),
-    coverages: coverages.length > 0 ? coverages : null,
   }
 }
 
@@ -252,7 +250,7 @@ export class ContractsService {
       
       // Don't remove user_id from fallback! Keep all fields that might work
       const fallbackPayload = Object.fromEntries(
-        Object.entries(payload).filter(([key]) => !['insurance_type', 'expiration_date'].includes(key))
+        Object.entries(payload).filter(([key]) => !['insurance_type', 'expiration_date', 'coverages'].includes(key))
       )
       console.log('ContractsService: Fallback payload:', fallbackPayload)
       
