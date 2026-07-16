@@ -222,6 +222,8 @@ export default function AdminContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [contractToEdit, setContractToEdit] = useState<Contract | null>(null)
   const [isCreatingContracts, setIsCreatingContracts] = useState(false)
+  // Coverages fetched from DB keyed by contract id (for contracts created outside the admin form)
+  const [dbCoveragesByContract, setDbCoveragesByContract] = useState<Record<string, any[]>>({})
   const [customers, setCustomers] = useState<CustomerOption[]>([])
   const [customerSelectionMap, setCustomerSelectionMap] = useState<Record<string, string>>({})
   const [assigningContractId, setAssigningContractId] = useState<string | null>(null)
@@ -380,6 +382,67 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
     loadCustomers()
   }, [])
 
+  // Load existing contracts + their coverages from Supabase when switching to the contracts tab
+  useEffect(() => {
+    if (activeTab !== 'contracts') return
+    const loadExistingContracts = async () => {
+      try {
+        const { data: contractRows, error: contractError } = await supabase
+          .from('contracts')
+          .select('*')
+          .order('created_at', { ascending: false })
+        if (contractError || !contractRows) return
+
+        // Map DB rows (snake_case) to the Contract shape used by the UI
+        const mapped: Contract[] = contractRows.map((row: any) => ({
+          id: row.id,
+          contractNumber: row.contract_number || '',
+          contractDate: row.contract_date || '',
+          insuranceType: row.insurance_type || '',
+          clientName: row.client_name || '',
+          clientCompanyName: row.client_company_name || row.client_name || '',
+          clientAddress: row.client_address || '',
+          clientCity: row.client_city || '',
+          clientState: row.client_state || '',
+          clientZip: row.client_zip || '',
+          clientPhone: row.client_phone || '',
+          clientEmail: row.client_email || '',
+          totalPremium: String(row.total_premium ?? ''),
+          downPayment: String(row.down_payment ?? ''),
+          unpaidBalance: String(row.unpaid_balance ?? ''),
+          amountFinanced: String(row.amount_financed ?? ''),
+          financeChargePercent: String(row.finance_charge_percent ?? ''),
+          financeCharge: String(row.finance_charge ?? ''),
+          monthlyPayment: String(row.monthly_payment ?? ''),
+          numberOfPayments: String(row.number_of_payments ?? ''),
+          firstDueDate: row.first_due_date || '',
+          termsAndConditions: row.terms || '',
+          coverageIds: [],
+          assignedCustomerId: row.user_id || null,
+        }))
+
+        // Load all coverages for these contracts in one query
+        const contractIds = contractRows.map((r: any) => r.id)
+        const { data: coverageRows } = await supabase
+          .from('coverages')
+          .select('*')
+          .in('contract_id', contractIds)
+
+        const newDbCoverages: Record<string, any[]> = {}
+        ;(coverageRows || []).forEach((c: any) => {
+          if (!newDbCoverages[c.contract_id]) newDbCoverages[c.contract_id] = []
+          newDbCoverages[c.contract_id].push(c)
+        })
+
+        setContracts(mapped)
+        setDbCoveragesByContract(newDbCoverages)
+      } catch (err) {
+        console.error('loadExistingContracts error', err)
+      }
+    }
+    loadExistingContracts()
+  }, [activeTab])
+
   const getFormContractValues = () => {
     const parsedTotalPremium = parseCurrencyValue(totalPremium) || 0
     const parsedDownPayment = parseCurrencyValue(downPayment) || 0
@@ -423,6 +486,16 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
       }
       const created = (json.created || []).map((c: any) => c.contract)
       setContracts([...contracts, ...created])
+      // Store DB coverages returned for each contract so the preview can show them
+      const newDbCoverages: Record<string, any[]> = {}
+      ;(json.created || []).forEach((item: any) => {
+        if (item.contract?.id && Array.isArray(item.coverages)) {
+          newDbCoverages[item.contract.id] = item.coverages
+        }
+      })
+      if (Object.keys(newDbCoverages).length > 0) {
+        setDbCoveragesByContract((prev) => ({ ...prev, ...newDbCoverages }))
+      }
       setContractToEdit(created[0] || null)
     } catch (err: any) {
       console.error('createContracts error', err)
@@ -509,6 +582,16 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
 
       const createdContracts = (json.created || []).map((item: any) => item.contract)
       setContracts((prev) => [...prev, ...createdContracts])
+      // Store DB coverages for preview
+      const newDbCoverages: Record<string, any[]> = {}
+      ;(json.created || []).forEach((item: any) => {
+        if (item.contract?.id && Array.isArray(item.coverages)) {
+          newDbCoverages[item.contract.id] = item.coverages
+        }
+      })
+      if (Object.keys(newDbCoverages).length > 0) {
+        setDbCoveragesByContract((prev) => ({ ...prev, ...newDbCoverages }))
+      }
       setSendContractMessage(`Contract sent to the selected customer with the policy number ${policyNumber}.`)
       setSelectedCustomerForSend('')
     } catch (error: unknown) {
@@ -661,7 +744,50 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
   }
 
   const getContractCoverages = (contract: Contract) => {
-    return coverages.filter((coverage) => contract.coverageIds.includes(coverage.id))
+    // First try the local form coverages (admin-created contracts)
+    const localCoverages = coverages.filter((coverage) => contract.coverageIds.includes(coverage.id))
+    if (localCoverages.length > 0) return localCoverages
+    // Fall back to DB coverages (e.g. contracts from personal insurance flow)
+    const db = dbCoveragesByContract[contract.id] || []
+    return db.map((c: any) => ({
+      id: c.id || '',
+      insuranceType: c.insurance_type || '',
+      policyNumber: c.policy_number || '',
+      effectiveDate: c.effective_date || '',
+      expirationDate: c.expiration_date || '',
+      eachOccurrence: c.each_occurrence ?? '',
+      generalAggregate: c.general_aggregate ?? '',
+      deductible: c.deductible ?? '',
+      insuredName: c.insured_name || '',
+      coverageDetails: c.coverage_details || '',
+      coverageLimit: c.coverage_limit ?? '',
+      combinedSingleLimit: c.combined_single_limit ?? '',
+      bodilyInjuryPerPerson: c.bodily_injury_per_person ?? '',
+      bodilyInjuryPerAccident: c.bodily_injury_per_accident ?? '',
+      propertyDamagePerAccident: c.property_damage_per_accident ?? '',
+      damageToRentedPremises: c.damage_to_rented_premises ?? '',
+      medExp: c.med_exp ?? '',
+      personalAdvInjury: c.personal_adv_injury ?? '',
+      productsCompletedOpsAgg: c.products_completed_ops_agg ?? '',
+      elEachAccident: c.el_each_accident ?? '',
+      elDiseaseEaEmployee: c.el_disease_ea_employee ?? '',
+      elDiseasePolicyLimit: c.el_disease_policy_limit ?? '',
+      autoAnyAuto: c.auto_any_auto || '',
+      autoOwnedAuto: c.auto_owned_auto || '',
+      autoHiredAutosOnly: c.auto_hired_autos_only || '',
+      autoNonOwnedAutosOnly: c.auto_non_owned_autos_only || '',
+      autoScheduledAutos: c.auto_scheduled_autos || '',
+      propertyBuildingLimit: c.property_building_limit ?? '',
+      propertyPersonalPropertyLimit: c.property_personal_property_limit ?? '',
+      certificateHolderName: c.certificate_holder_name || '',
+      certificateHolderAddress: c.certificate_holder_address || '',
+      annualLimit: '',
+      perIncidentLimit: '',
+      itemValue: '',
+      propertyValue: '',
+      liabilityLimit: '',
+      cancellationLimit: '',
+    } as Coverage))
   }
 
   const generateCoverageDetailsHTML = (coverage: Coverage) => {
@@ -1212,7 +1338,9 @@ The Federal Equal Credit Opportunity Act prohibits creditors from discriminating
 
   const renderContractPreview = (contract: Contract) => {
     const coverageIds = Array.isArray(contract.coverageIds) ? contract.coverageIds : []
-    const contractCoverages = coverages.filter((coverage) => coverageIds.includes(coverage.id))
+    const contractCoverages = coverageIds.length > 0
+      ? coverages.filter((coverage) => coverageIds.includes(coverage.id))
+      : getContractCoverages(contract)
     const totalPremium = parseCurrencyValue(contract.totalPremium) || 0
     const downPayment = parseCurrencyValue(contract.downPayment) || 0
     const unpaidBalance = totalPremium - downPayment
