@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server'
 import ContractsService from '@/lib/services/ContractsService'
 import supabaseAdmin from '@/lib/supabaseAdmin'
 
-const db = supabaseAdmin as unknown as typeof supabaseAdmin
-
 const getErrorMessage = (value: unknown) => {
   if (typeof value === 'string') return value
   if (value instanceof Error) return value.message
@@ -43,24 +41,30 @@ const MESSAGES: Record<string, Record<string, string>> = {
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, message: MESSAGES.en.authRequired }, { status: 401 })
+    }
+
+    const accessToken = authHeader.replace('Bearer ', '').trim()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(accessToken)
+
+    if (userError || !user?.id) {
+      return NextResponse.json({ success: false, message: MESSAGES.en.authRequired }, { status: 401 })
+    }
+
+    const userId = user.id
+
     const body = await req.json()
-    const { contract, userId } = body
+    const { contract } = body
     
     const lang = (body.lang as string) || 'en'
 
     if (!contract) {
       return NextResponse.json({ success: false, message: MESSAGES[lang]?.contractRequired || MESSAGES.en.contractRequired }, { status: 400 })
-    }
-
-    // Require an authenticated user to create contracts
-    if (!userId) {
-      return NextResponse.json({ success: false, message: MESSAGES[lang]?.authRequired || MESSAGES.en.authRequired }, { status: 401 })
-    }
-
-    // Verify user exists
-    const { data: userData, error: userErr } = await db.from('users').select('*').eq('id', userId).single()
-    if (userErr || !userData) {
-      return NextResponse.json({ success: false, message: MESSAGES[lang]?.userNotFound || MESSAGES.en.userNotFound }, { status: 401 })
     }
 
     try {

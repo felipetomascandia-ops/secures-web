@@ -646,9 +646,20 @@ export default function PersonalInsurancePage() {
 
       console.log('Creating contract with coverages:', selectedCoverages)
 
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const accessToken = currentSession?.access_token
+      if (!accessToken) {
+        alert(lang === 'es' ? 'Sesión expirada. Por favor inicia sesión de nuevo.' : 'Session expired. Please sign in again.')
+        setLoading(false)
+        return
+      }
+
       const response = await fetch('/api/personal-insurance/create-contract', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           contract: {
             contractNumber: `PERS-${Date.now()}`,
@@ -673,8 +684,7 @@ export default function PersonalInsurancePage() {
             policyStatus: 'active',
             coverages: selectedCoverages,
           },
-            userId: user?.id,
-            lang,
+          lang,
         }),
       })
       const data = await response.json()
@@ -1081,6 +1091,12 @@ Agent Signature: _______________________`
               <button onClick={() => {
                 if (!user) {
                   alert(lang === 'es' ? 'Necesitas una cuenta para continuar. Por favor inicia sesión.' : 'You need an account to continue. Please sign in.')
+                  return
+                }
+                const requiredFields: (keyof typeof formData)[] = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address', 'city', 'state', 'zip']
+                const missing = requiredFields.filter(f => !formData[f] || String(formData[f]).trim() === '')
+                if (missing.length > 0) {
+                  alert(lang === 'es' ? 'Por favor completa todos los campos obligatorios, incluyendo la fecha de nacimiento.' : 'Please fill all required fields, including date of birth.')
                   return
                 }
                 setStep('insurance')
