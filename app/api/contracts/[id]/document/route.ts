@@ -503,7 +503,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     
-    const contractQuery: any = await (supabaseAdmin as any).from('contracts').select('*').eq('id', id).single()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const contractQuery: any = await (supabaseAdmin as unknown as any).from('contracts').select('*').eq('id', id).single()
     const contract: Record<string, unknown> | null = contractQuery.data
     const contractError = contractQuery.error
 
@@ -514,14 +515,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     // Obtener coberturas de la tabla 'coverages' asociadas a este contrato
-    const { data: coveragesData, error: coveragesError } = await (supabaseAdmin as unknown as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const coveragesQuery: any = await (supabaseAdmin as unknown as any)
       .from('coverages')
       .select('*')
       .eq('contract_id', id)
+    const coveragesData = coveragesQuery.data as Record<string, unknown>[] | null
+    const coveragesError = coveragesQuery.error
     
     console.log('Document route: Coverages from DB', { coveragesCount: coveragesData?.length || 0, coverages: coveragesData, coveragesError })
     
-    const coverages = (coveragesData as Record<string, unknown>[] | null) || []
+    const coverages = coveragesData || []
 
     const html = generateContractPDF(contract, coverages)
 
