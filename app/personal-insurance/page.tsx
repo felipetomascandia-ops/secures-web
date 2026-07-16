@@ -608,6 +608,10 @@ export default function PersonalInsurancePage() {
 
   const handleGenerateContract = async () => {
     if (!selectedPlan || !selectedInsurance) return
+    if (!user) {
+      alert(lang === 'es' ? 'Debes iniciar sesión para crear un contrato.' : 'You must be logged in to create a contract.')
+      return
+    }
 
     setLoading(true)
     try {
@@ -655,7 +659,8 @@ export default function PersonalInsurancePage() {
             policyStatus: 'active',
             coverages: selectedCoverages,
           },
-          userId: user?.id,
+            userId: user?.id,
+            lang,
         }),
       })
 
@@ -1052,7 +1057,13 @@ Agent Signature: _______________________`
                 </div>
               </div>
 
-              <button onClick={() => setStep('insurance')} className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 font-semibold text-white hover:from-blue-700 hover:to-purple-700">
+              <button onClick={() => {
+                if (!user) {
+                  alert(lang === 'es' ? 'Necesitas una cuenta para continuar. Por favor inicia sesión.' : 'You need an account to continue. Please sign in.')
+                  return
+                }
+                setStep('insurance')
+              }} className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 font-semibold text-white hover:from-blue-700 hover:to-purple-700">
                 {lang === 'es' ? 'Continuar' : 'Continue'}
               </button>
             </div>

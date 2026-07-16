@@ -24,19 +24,43 @@ const getErrorMessage = (value: unknown) => {
 
 export const runtime = 'nodejs'
 
+const MESSAGES: Record<string, Record<string, string>> = {
+  en: {
+    contractRequired: 'Contract data required',
+    authRequired: 'Authentication required',
+    userNotFound: 'Authenticated user not found',
+    failedCreate: 'Failed to create contract',
+    internalError: 'Internal error',
+  },
+  es: {
+    contractRequired: 'Se requiere información del contrato',
+    authRequired: 'Autenticación requerida',
+    userNotFound: 'Usuario autenticado no encontrado',
+    failedCreate: 'No se pudo crear el contrato',
+    internalError: 'Error interno',
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { contract, userId } = body
     
+    const lang = (body.lang as string) || 'en'
+
     if (!contract) {
-      return NextResponse.json({ success: false, message: 'Contract data required' }, { status: 400 })
+      return NextResponse.json({ success: false, message: MESSAGES[lang]?.contractRequired || MESSAGES.en.contractRequired }, { status: 400 })
     }
 
-    // If userId is provided, verify user exists (optional for now)
-    if (userId) {
-      const { data: userData } = await db.from('users').select('*').eq('id', userId).single()
-      // Don't fail if user doesn't exist yet - they can register later
+    // Require an authenticated user to create contracts
+    if (!userId) {
+      return NextResponse.json({ success: false, message: MESSAGES[lang]?.authRequired || MESSAGES.en.authRequired }, { status: 401 })
+    }
+
+    // Verify user exists
+    const { data: userData, error: userErr } = await db.from('users').select('*').eq('id', userId).single()
+    if (userErr || !userData) {
+      return NextResponse.json({ success: false, message: MESSAGES[lang]?.userNotFound || MESSAGES.en.userNotFound }, { status: 401 })
     }
 
     try {
@@ -58,10 +82,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, created: [result] })
     } catch (err: unknown) {
       console.error('Error creating contract:', err)
-      return NextResponse.json({ success: false, message: getErrorMessage(err) || 'Failed to create contract' }, { status: 500 })
+      const msg = getErrorMessage(err) || MESSAGES[lang]?.failedCreate || MESSAGES.en.failedCreate
+      return NextResponse.json({ success: false, message: msg }, { status: 500 })
     }
   } catch (err: unknown) {
     console.error('Contract creation route error:', err)
-    return NextResponse.json({ success: false, message: getErrorMessage(err) || 'Internal error' }, { status: 500 })
+    const bodyErrLang = (err && typeof err === 'object' && (err as any).lang) ? (err as any).lang : 'en'
+    return NextResponse.json({ success: false, message: getErrorMessage(err) || MESSAGES[bodyErrLang]?.internalError || MESSAGES.en.internalError }, { status: 500 })
   }
 }
