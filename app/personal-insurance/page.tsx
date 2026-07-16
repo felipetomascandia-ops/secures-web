@@ -490,6 +490,8 @@ const translations: Record<Language, {
     state: 'State',
     zip: 'ZIP Code',
     needAccount: 'You need an account to continue. Please register or sign in.',
+    optional: 'Optional',
+    fillRequired: 'Please fill all required fields before continuing.',
     register: 'Register',
     login: 'Sign In',
     drawSignature: 'Draw your signature below',
@@ -540,6 +542,8 @@ const translations: Record<Language, {
     state: 'Estado',
     zip: 'Código Postal',
     needAccount: 'Necesitas una cuenta para continuar. Por favor regístrate o inicia sesión.',
+    optional: 'Opcional',
+    fillRequired: 'Por favor completa todos los campos obligatorios antes de continuar.',
     register: 'Registrarse',
     login: 'Iniciar Sesión',
     drawSignature: 'Dibuja tu firma abajo',
@@ -615,6 +619,14 @@ export default function PersonalInsurancePage() {
 
     setLoading(true)
     try {
+      // Validate required form fields (SSN optional)
+      const requiredFields = ['firstName','lastName','email','phone','address','city','state','zip','dateOfBirth']
+      const missing = requiredFields.filter(f => !formData[f as keyof typeof formData] || String(formData[f as keyof typeof formData]).trim() === '')
+      if (missing.length > 0) {
+        alert(t.fillRequired)
+        setLoading(false)
+        return
+      }
       const plan = selectedPlan
       const insuranceType = personalInsuranceTypes.find(i => i.key === selectedInsurance)!
 
@@ -663,10 +675,11 @@ export default function PersonalInsurancePage() {
             lang,
         }),
       })
-
       const data = await response.json()
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to create contract')
+        alert(data?.message || (lang === 'es' ? 'No se pudo crear el contrato' : 'Failed to create contract'))
+        setLoading(false)
+        return
       }
 
       const createdContract = data.created?.[0]?.contract
@@ -676,7 +689,7 @@ export default function PersonalInsurancePage() {
       }
     } catch (error) {
       console.error('Error creating contract:', error)
-      alert(lang === 'es' ? 'Error al crear el contrato. Por favor intenta de nuevo.' : 'Error creating contract. Please try again.')
+      alert((error as any)?.message || (lang === 'es' ? 'Error al crear el contrato. Por favor intenta de nuevo.' : 'Error creating contract. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -994,6 +1007,7 @@ Agent Signature: _______________________`
         {step === 'form' && (
           <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">{t.personalInfo}</h2>
+            <p className="text-sm text-gray-600 mb-4">{lang === 'es' ? 'Todos los campos son obligatorios excepto los últimos 4 dígitos de SSN.' : 'All fields are required except the last 4 digits of SSN.'}</p>
             
             {!user && (
               <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -1033,8 +1047,8 @@ Agent Signature: _______________________`
               </div>
 
               <div>
-                <label htmlFor="ssn" className="block text-sm font-medium text-gray-700 mb-2">{t.ssn} *</label>
-                <input id="ssn" type="text" maxLength={4} value={formData.ssn} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500" required />
+                <label htmlFor="ssn" className="block text-sm font-medium text-gray-700 mb-2">{t.ssn} <span className="text-sm text-gray-500">({t.optional})</span></label>
+                <input id="ssn" type="text" maxLength={4} value={formData.ssn} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500" />
               </div>
 
               <div>
