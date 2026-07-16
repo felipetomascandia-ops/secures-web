@@ -101,6 +101,7 @@ export async function POST(req: Request) {
     const checkout = (resultRec['paymentLink'] ?? resultRec['checkout'] ?? resultRec['payment_link'] ?? null) as Record<string, unknown> | null
 
     const checkoutUrl = (checkout && (checkout['url'] ?? checkout['checkoutPageUrl'] ?? checkout['checkout_page_url'] ?? (checkout['payment_link'] && (checkout['payment_link'] as Record<string, unknown>)['url']))) || null
+    const squareLinkId = (checkout && (checkout['id'] as string | undefined)) || null
 
     if (!checkoutUrl) {
       console.error('Square checkout response missing URL', { checkout })
@@ -108,11 +109,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Failed to generate payment link' }, { status: 502 })
     }
 
-    // Update payment with checkout URL
+    // Update payment with checkout URL and Square payment link ID
     const { error: updateError } = await db
       .from('payments')
       .update({
         square_url: checkoutUrl,
+        square_checkout_id: squareLinkId,
         status: 'pending',
       })
       .eq('id', payment.id)

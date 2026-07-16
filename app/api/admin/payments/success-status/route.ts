@@ -4,39 +4,42 @@ import supabaseAdmin from '@/lib/supabaseAdmin'
 export const runtime = 'nodejs'
 
 // Check Square directly for the order status linked to a payment link
-async function checkSquareOrderStatus(squareUrl: string): Promise<string | null> {
+async function checkSquareOrderStatus(payment: Record<string, unknown>): Promise<string | null> {
   try {
-    // Extract the payment link ID from the URL (last path segment)
-    const match = squareUrl.match(/\/pay\/([a-zA-Z0-9_-]+)/)
-    if (!match) return null
-    const paymentLinkId = match[1]
-
-    const squareEnv = process.env.SQUARE_ENVIRONMENT || 'production'
-    const squareToken = process.env.SQUARE_ACCESS_TOKEN
+    const squareToken = process.env.SQUARE_TOKEN || process.env.SQUARE_ACCESS_TOKEN
     if (!squareToken) return null
 
-    const baseUrl = squareEnv === 'sandbox'
-      ? 'https://connect.squareupsandbox.com'
-      : 'https://connect.squareup.com'
+    const squareEnv = process.env.SQUARE_ENVIRONMENT || process.env.SQUARE_ENV || 'production'
+    const baseUrl = squareEnv === 'production'
+      ? 'https://connect.squareup.com'
+      : 'https://connect.squareupsandbox.com'
 
-    const res = await fetch(`${baseUrl}/v2/online-checkout/payment-links/${paymentLinkId}`, {
-      headers: {
-        Authorization: `Bearer ${squareToken}`,
-        'Content-Type': 'application/json',
-      },
+    // Prefer the stored payment link ID, fall back to parsing the URL
+    let paymentLinkId = payment.square_checkout_id as string | null | undefined
+
+    if (!paymentLinkId && payment.square_url) {
+      const match = (payment.square_url as string).match(/\/pay\/([a-zA-Z0-9_-]+)/)
+      if (match) paymentLinkId = match[1]
+    }
+
+    if (!paymentLinkId) return null
+
+    // Fetch the payment link to get the associated order ID
+    const linkRes = await fetch(`${baseUrl}/v2/online-checkout/payment-links/${paymentLinkId}`, {
+      headers: { Authorization: `Bearer ${squareToken}`, 'Content-Type': 'application/json' },
     })
-    if (!res.ok) return null
-    const json = await res.json() as Record<string, unknown>
-    const link = (json['payment_link'] as Record<string, unknown> | undefined)
+    if (!linkRes.ok) {
+      console.warn('Square payment-links fetch failed', linkRes.status, await linkRes.text())
+      return null
+    }
+    const linkJson = await linkRes.json() as Record<string, unknown>
+    const link = linkJson['payment_link'] as Record<string, unknown> | undefined
     const orderId = link?.['order_id'] as string | undefined
     if (!orderId) return null
 
-    // Get the order to check its state
+    // Fetch the order to get its state
     const orderRes = await fetch(`${baseUrl}/v2/orders/${orderId}`, {
-      headers: {
-        Authorization: `Bearer ${squareToken}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${squareToken}`, 'Content-Type': 'application/json' },
     })
     if (!orderRes.ok) return null
     const orderJson = await orderRes.json() as Record<string, unknown>
@@ -44,11 +47,13 @@ async function checkSquareOrderStatus(squareUrl: string): Promise<string | null>
     const state = order?.['state'] as string | undefined
     if (!state) return null
 
-    // COMPLETED = paid, OPEN = not yet paid, CANCELED = canceled
+    console.log('Square order state check', { paymentLinkId, orderId, state })
+
     if (state === 'COMPLETED') return 'completed'
     if (state === 'CANCELED') return 'failed'
     return null
-  } catch {
+  } catch (err) {
+    console.error('checkSquareOrderStatus error', err)
     return null
   }
 }
@@ -80,8 +85,8 @@ export async function GET(req: Request) {
       const payment = data as Record<string, unknown>
 
       // If still pending, try confirming directly with Square
-      if (payment.status === 'pending' && payment.square_url) {
-        const squareStatus = await checkSquareOrderStatus(payment.square_url as string)
+      if (payment.status === 'pending') {
+        const squareStatus = await checkSquareOrderStatus(payment)
         if (squareStatus) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabaseAdmin as any).from('payments').update({ status: squareStatus }).eq('id', paymentId)
