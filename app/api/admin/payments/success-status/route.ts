@@ -3,6 +3,56 @@ import supabaseAdmin from '@/lib/supabaseAdmin'
 
 export const runtime = 'nodejs'
 
+// Check Square directly for the order status linked to a payment link
+async function checkSquareOrderStatus(squareUrl: string): Promise<string | null> {
+  try {
+    // Extract the payment link ID from the URL (last path segment)
+    const match = squareUrl.match(/\/pay\/([a-zA-Z0-9_-]+)/)
+    if (!match) return null
+    const paymentLinkId = match[1]
+
+    const squareEnv = process.env.SQUARE_ENVIRONMENT || 'production'
+    const squareToken = process.env.SQUARE_ACCESS_TOKEN
+    if (!squareToken) return null
+
+    const baseUrl = squareEnv === 'sandbox'
+      ? 'https://connect.squareupsandbox.com'
+      : 'https://connect.squareup.com'
+
+    const res = await fetch(`${baseUrl}/v2/online-checkout/payment-links/${paymentLinkId}`, {
+      headers: {
+        Authorization: `Bearer ${squareToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!res.ok) return null
+    const json = await res.json() as Record<string, unknown>
+    const link = (json['payment_link'] as Record<string, unknown> | undefined)
+    const orderId = link?.['order_id'] as string | undefined
+    if (!orderId) return null
+
+    // Get the order to check its state
+    const orderRes = await fetch(`${baseUrl}/v2/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${squareToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!orderRes.ok) return null
+    const orderJson = await orderRes.json() as Record<string, unknown>
+    const order = orderJson['order'] as Record<string, unknown> | undefined
+    const state = order?.['state'] as string | undefined
+    if (!state) return null
+
+    // COMPLETED = paid, OPEN = not yet paid, CANCELED = canceled
+    if (state === 'COMPLETED') return 'completed'
+    if (state === 'CANCELED') return 'failed'
+    return null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
@@ -26,6 +76,19 @@ export async function GET(req: Request) {
       if (error || !data) {
         return NextResponse.json({ success: false, message: 'Payment not found', error }, { status: 404 })
       }
+
+      const payment = data as Record<string, unknown>
+
+      // If still pending, try confirming directly with Square
+      if (payment.status === 'pending' && payment.square_url) {
+        const squareStatus = await checkSquareOrderStatus(payment.square_url as string)
+        if (squareStatus) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabaseAdmin as any).from('payments').update({ status: squareStatus }).eq('id', paymentId)
+          return NextResponse.json({ success: true, payment: { ...payment, status: squareStatus } })
+        }
+      }
+
       return NextResponse.json({ success: true, payment: data })
     }
 

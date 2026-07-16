@@ -22,14 +22,17 @@ function PaymentSuccessContent() {
         // Poll for payment status
         const interval = setInterval(async () => {
           try {
-            const res = await fetch(`/api/payments/success-status?paymentId=${paymentId}`)
+            const res = await fetch(`/api/admin/payments/success-status?paymentId=${paymentId}`)
             const data = await res.json()
-            
-            if (data.success && data.status === 'completed') {
+
+            // The endpoint returns { success, payment: { status } }
+            const status = data?.payment?.status || data?.status || null
+
+            if (data.success && status === 'completed') {
               setPaymentStatus('completed')
               clearInterval(interval)
               setLoading(false)
-            } else if (data.status === 'failed') {
+            } else if (status === 'failed' || status === 'canceled' || status === 'cancelled') {
               setPaymentStatus('failed')
               clearInterval(interval)
               setLoading(false)
@@ -39,11 +42,11 @@ function PaymentSuccessContent() {
           }
         }, 2000)
 
-        // Timeout after 5 minutes
+        // Timeout after 3 minutes — show the "check your email" screen instead of spinning forever
         setTimeout(() => {
           clearInterval(interval)
           setLoading(false)
-        }, 5 * 60 * 1000)
+        }, 3 * 60 * 1000)
       } catch (error) {
         console.error('Error:', error)
         setLoading(false)
