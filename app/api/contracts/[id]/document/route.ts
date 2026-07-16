@@ -503,7 +503,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     
-    const { data: contract, error: contractError } = await supabaseAdmin.from('contracts').select('*').eq('id', id).single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>
+    const { data: contract, error: contractError } = await (supabaseAdmin as unknown as any).from('contracts').select('*').eq('id', id).single() as { data: Record<string, unknown> | null; error: unknown }
 
     console.log('Document route: Contract data', { contractId: id, contract, contractError })
 
