@@ -689,7 +689,12 @@ export default function PersonalInsurancePage() {
       }
     } catch (error) {
       console.error('Error creating contract:', error)
-      alert((error as any)?.message || (lang === 'es' ? 'Error al crear el contrato. Por favor intenta de nuevo.' : 'Error creating contract. Please try again.'))
+      let errMsg = lang === 'es' ? 'Error al crear el contrato. Por favor intenta de nuevo.' : 'Error creating contract. Please try again.'
+      if (error && typeof error === 'object') {
+        const maybeMessage = (error as { message?: unknown }).message
+        if (typeof maybeMessage === 'string') errMsg = maybeMessage
+      }
+      alert(errMsg)
     } finally {
       setLoading(false)
     }
