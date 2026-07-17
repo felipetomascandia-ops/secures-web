@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import supabaseAdmin from '@/lib/supabaseAdmin'
+import { completePaymentAndActivate } from '@/lib/services/PaymentCompletionService'
 
 export const runtime = 'nodejs'
 
@@ -90,8 +91,20 @@ export async function GET(req: Request) {
         if (squareStatus) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabaseAdmin as any).from('payments').update({ status: squareStatus }).eq('id', paymentId)
+          
+          // If completed, activate contract and send certificates
+          if (squareStatus === 'completed') {
+            const updatedPayment = { ...payment, status: 'completed' }
+            await completePaymentAndActivate(updatedPayment)
+          }
+          
           return NextResponse.json({ success: true, payment: { ...payment, status: squareStatus } })
         }
+      }
+
+      // If already completed in DB but contract not activated yet, activate it now
+      if (payment.status === 'completed') {
+        await completePaymentAndActivate(payment)
       }
 
       return NextResponse.json({ success: true, payment: data })

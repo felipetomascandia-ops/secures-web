@@ -68,9 +68,10 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Create contract with coverages
+      // Create contract with coverages and ensure userId is set
       const contractData = {
         ...contract,
+        userId,  // Set the authenticated user's ID so it appears in Mi Panel
         coverages: contract.coverages || [],
         vehicles: []
       }

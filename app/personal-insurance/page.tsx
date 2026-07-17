@@ -683,6 +683,7 @@ export default function PersonalInsurancePage() {
             status: 'pending',
             policyStatus: 'active',
             coverages: selectedCoverages,
+            sendToClient: true,  // Send email with contract and certificates
           },
           lang,
         }),

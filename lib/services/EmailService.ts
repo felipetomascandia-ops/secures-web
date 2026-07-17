@@ -14,7 +14,6 @@ export class EmailService {
   ) {
     if (resendApiKey) {
       const verifiedFrom = from || 'contacto@olimpocoveragegroup.com'
-      const allowedTo = to === process.env.EMAIL_FROM || to === process.env.RESEND_FROM || to === 'contacto@olimpocoveragegroup.com' ? [to] : ['contacto@olimpocoveragegroup.com']
 
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -24,7 +23,7 @@ export class EmailService {
         },
         body: JSON.stringify({
           from: verifiedFrom,
-          to: allowedTo,
+          to: [to],
           subject,
           html,
         }),

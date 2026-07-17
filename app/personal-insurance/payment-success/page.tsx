@@ -5,11 +5,28 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
+interface CertificateInfo {
+  id: string
+  coverage_id: string
+  certificate_type: string
+  certificate_url: string
+}
+
+interface CoverageInfo {
+  id: string
+  insurance_type: string
+  policy_number: string | null
+}
+
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const paymentId = searchParams.get('paymentId')
   const [loading, setLoading] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
+  const [contractId, setContractId] = useState<string | null>(null)
+  const [contractNumber, setContractNumber] = useState<string | null>(null)
+  const [certificates, setCertificates] = useState<CertificateInfo[]>([])
+  const [coverages, setCoverages] = useState<CoverageInfo[]>([])
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -27,10 +44,30 @@ function PaymentSuccessContent() {
 
             // The endpoint returns { success, payment: { status } }
             const status = data?.payment?.status || data?.status || null
+            const paymentContractId = data?.payment?.contract_id || null
 
             if (data.success && status === 'completed') {
               setPaymentStatus('completed')
               clearInterval(interval)
+              
+              // If we have a contract_id, fetch the certificates
+              if (paymentContractId) {
+                setContractId(paymentContractId)
+                try {
+                  const certRes = await fetch(`/api/contracts/${paymentContractId}/certificates`)
+                  if (certRes.ok) {
+                    const certData = await certRes.json()
+                    if (certData.success) {
+                      setCertificates(certData.certificates || [])
+                      setCoverages(certData.coverages || [])
+                      setContractNumber(certData.contractNumber || null)
+                    }
+                  }
+                } catch (err) {
+                  console.error('Error fetching certificates:', err)
+                }
+              }
+              
               setLoading(false)
             } else if (status === 'failed' || status === 'canceled' || status === 'cancelled') {
               setPaymentStatus('failed')
@@ -79,6 +116,69 @@ function PaymentSuccessContent() {
               Tu pago inicial ha sido procesado correctamente. Tu cobertura de seguro está ahora activa.
             </p>
             
+            {/* Contract Document */}
+            {contractId && (
+              <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
+                <h3 className="text-lg font-semibold text-white mb-4">📄 Contrato</h3>
+                <a
+                  href={`/api/contracts/${contractId}/document`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+                >
+                  📋 Ver / Descargar Contrato {contractNumber ? `#${contractNumber}` : ''}
+                </a>
+              </div>
+            )}
+
+            {/* Certificates */}
+            {certificates.length > 0 && (
+              <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
+                <h3 className="text-lg font-semibold text-white mb-4">🎖️ Tus Certificados de Seguro</h3>
+                <div className="space-y-3">
+                  {certificates.map((cert) => {
+                    const coverage = coverages.find(c => c.id === cert.coverage_id)
+                    const insuranceLabel = coverage?.insurance_type || cert.certificate_type
+                    const typeLabels: Record<string, string> = {
+                      'personal-auto': 'Auto Personal',
+                      'motorcycle': 'Motocicleta',
+                      'pet': 'Mascotas',
+                      'mobile-device': 'Dispositivo Móvil',
+                      'event': 'Eventos',
+                      'bicycle': 'Bicicleta',
+                      'general-liability': 'Responsabilidad General',
+                      'commercial-auto': 'Auto Comercial',
+                      'commercial-property': 'Propiedad Comercial',
+                      'workers-comp': 'Compensación Laboral',
+                    }
+                    const displayName = typeLabels[insuranceLabel] || insuranceLabel || 'Seguro'
+                    
+                    return (
+                      <div key={cert.id} className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">🎖️</span>
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-white">{displayName}</p>
+                            {coverage?.policy_number && (
+                              <p className="text-xs text-slate-400">Póliza: {coverage.policy_number}</p>
+                            )}
+                          </div>
+                        </div>
+                        <a
+                          href={`/api/contracts/${contractId}/certificate/${cert.coverage_id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500"
+                        >
+                          📥 Descargar
+                        </a>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
               <h3 className="text-lg font-semibold text-white mb-4">Próximos Pasos:</h3>
               <ul className="space-y-3 text-sm text-slate-300">
