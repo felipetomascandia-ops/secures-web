@@ -27,7 +27,13 @@ function PaymentSuccessContent() {
   const [contractNumber, setContractNumber] = useState<string | null>(null)
   const [certificates, setCertificates] = useState<CertificateInfo[]>([])
   const [coverages, setCoverages] = useState<CoverageInfo[]>([])
-  const [payments, setPayments] = useState<any[]>([])
+  const [payments, setPayments] = useState<Array<{
+    id: string
+    description?: string | null
+    amount: number
+    status: string
+    created_at: string
+  }>>([])
   const [error, setError] = useState<string | null>(null)
 
   const loadAllData = async (contractId: string) => {
