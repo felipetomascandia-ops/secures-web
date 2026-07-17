@@ -1,20 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
-import { createHmac, timingSafeEqual } from 'crypto'
 import supabaseAdmin from '@/lib/supabaseAdmin'
 import { completePaymentAndActivate } from '@/lib/services/PaymentCompletionService'
+import { WebhooksHelper } from 'square'
 
 export const runtime = 'nodejs'
 
 const db = supabaseAdmin as unknown as any
 
-/** Find the internal payment record that matches this Square event.
- *  Tries (in order):
- *   1. square_checkout_id column  (set since the latest fix)
- *   2. square_url contains the payment_link_id in the path
- */
+const NOTIFICATION_URL = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/api/square/webhook`
+
+/** Find the internal payment record that matches this Square event. */
 async function findPaymentBySquareId(squareLinkId: string): Promise<Record<string, unknown> | null> {
-  // 1. Exact match on stored ID
   const { data: byId } = await db
     .from('payments')
     .select('*')
@@ -22,7 +19,6 @@ async function findPaymentBySquareId(squareLinkId: string): Promise<Record<strin
     .maybeSingle()
   if (byId) return byId
 
-  // 2. URL contains the id  (older records that didn't store the id directly)
   const { data: byUrl } = await db
     .from('payments')
     .select('*')
@@ -46,22 +42,30 @@ export async function POST(req: Request) {
 
     const secret = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY
 
-    // If signature key is configured, validate it. If not configured at all,
-    // log a warning but still process (useful during initial setup).
+    // Verify signature using Square's official WebhooksHelper
+    // IMPORTANT: Square's signature includes the notificationUrl in the hash,
+    // so we MUST use the SDK's verifySignature method.
     if (secret) {
       if (!signatureHeader) {
         console.warn('Webhook missing signature header')
         return NextResponse.json({ success: false, message: 'missing signature' }, { status: 401 })
       }
-      const computed = createHmac('sha256', secret).update(raw).digest('base64')
-      const signatureBuf = Buffer.from(signatureHeader)
-      const computedBuf = Buffer.from(computed)
-      if (
-        signatureBuf.length !== computedBuf.length ||
-        !timingSafeEqual(signatureBuf, computedBuf)
-      ) {
-        console.warn('Webhook signature mismatch')
-        return NextResponse.json({ success: false, message: 'invalid signature' }, { status: 401 })
+
+      try {
+        const isValid = await WebhooksHelper.verifySignature({
+          requestBody: raw,
+          signatureHeader: signatureHeader,
+          signatureKey: secret,
+          notificationUrl: NOTIFICATION_URL,
+        })
+        if (!isValid) {
+          console.warn('Webhook: Square signature verification FAILED', { notificationUrl: NOTIFICATION_URL })
+          return NextResponse.json({ success: false, message: 'invalid signature' }, { status: 403 })
+        }
+        console.info('Webhook: Square signature verified OK')
+      } catch (verifyErr) {
+        console.error('Webhook: Square signature verification threw error', verifyErr)
+        return NextResponse.json({ success: false, message: 'signature verification error' }, { status: 403 })
       }
     } else {
       console.warn('SQUARE_WEBHOOK_SIGNATURE_KEY not set — processing webhook without signature validation')
