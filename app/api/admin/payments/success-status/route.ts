@@ -4,8 +4,14 @@ import { completePaymentAndActivate } from '@/lib/services/PaymentCompletionServ
 
 export const runtime = 'nodejs'
 
-// Check Square directly for the order status linked to a payment link
-async function checkSquareOrderStatus(payment: Record<string, unknown>): Promise<string | null> {
+/**
+ * Check Square directly for payments completed via a payment link.
+ * 
+ * For Payment Links created via checkout.paymentLinks, Square assigns
+ * completed payments that reference the payment_link_id. This function
+ * searches Square's payments API for payments matching our link ID.
+ */
+async function checkSquarePaymentStatus(payment: Record<string, unknown>): Promise<string | null> {
   try {
     const squareToken = process.env.SQUARE_TOKEN || process.env.SQUARE_ACCESS_TOKEN
     if (!squareToken) return null
@@ -15,46 +21,77 @@ async function checkSquareOrderStatus(payment: Record<string, unknown>): Promise
       ? 'https://connect.squareup.com'
       : 'https://connect.squareupsandbox.com'
 
-    // Prefer the stored payment link ID, fall back to parsing the URL
     let paymentLinkId = payment.square_checkout_id as string | null | undefined
 
+    // Fallback: extract from URL
     if (!paymentLinkId && payment.square_url) {
       const match = (payment.square_url as string).match(/\/pay\/([a-zA-Z0-9_-]+)/)
       if (match) paymentLinkId = match[1]
     }
 
-    if (!paymentLinkId) return null
-
-    // Fetch the payment link to get the associated order ID
-    const linkRes = await fetch(`${baseUrl}/v2/online-checkout/payment-links/${paymentLinkId}`, {
-      headers: { Authorization: `Bearer ${squareToken}`, 'Content-Type': 'application/json' },
-    })
-    if (!linkRes.ok) {
-      console.warn('Square payment-links fetch failed', linkRes.status, await linkRes.text())
+    if (!paymentLinkId) {
+      console.warn('checkSquarePaymentStatus: no paymentLinkId found')
       return null
     }
-    const linkJson = await linkRes.json() as Record<string, unknown>
-    const link = linkJson['payment_link'] as Record<string, unknown> | undefined
-    const orderId = link?.['order_id'] as string | undefined
-    if (!orderId) return null
 
-    // Fetch the order to get its state
-    const orderRes = await fetch(`${baseUrl}/v2/orders/${orderId}`, {
-      headers: { Authorization: `Bearer ${squareToken}`, 'Content-Type': 'application/json' },
+    // Search Square payments by source type "card" to find payments
+    // associated with this payment link. We use the listPayments endpoint.
+    const searchRes = await fetch(`${baseUrl}/v2/payments`, {
+      method: 'GET',
+      headers: { 
+        Authorization: `Bearer ${squareToken}`,
+        'Content-Type': 'application/json'
+      },
     })
-    if (!orderRes.ok) return null
-    const orderJson = await orderRes.json() as Record<string, unknown>
-    const order = orderJson['order'] as Record<string, unknown> | undefined
-    const state = order?.['state'] as string | undefined
-    if (!state) return null
+    if (!searchRes.ok) {
+      console.warn('Square payments list fetch failed', searchRes.status)
+      return null
+    }
+    const searchJson = await searchRes.json() as Record<string, unknown>
+    const paymentsList = searchJson['payments'] as Record<string, unknown>[] | undefined
 
-    console.log('Square order state check', { paymentLinkId, orderId, state })
+    if (!paymentsList || paymentsList.length === 0) {
+      console.warn('checkSquarePaymentStatus: no payments found in Square')
+      return null
+    }
 
-    if (state === 'COMPLETED') return 'completed'
-    if (state === 'CANCELED') return 'failed'
+    // Find the payment that matches our payment_link_id
+    const matchingPayment = paymentsList.find((p: Record<string, unknown>) => {
+      const linkIds: string[] = []
+      // Check various places Square puts the link ID
+      const refs = p['reference_id'] as string | undefined
+      const linkId = p['payment_link_id'] as string | undefined
+      const note = p['note'] as string | undefined
+      
+      if (linkId) linkIds.push(linkId)
+      if (refs) linkIds.push(refs)
+      // Also check if note contains our link ID (for some Square configurations)
+      if (note && note.includes(paymentLinkId)) return true
+      
+      return linkIds.some(id => id === paymentLinkId)
+    })
+
+    if (!matchingPayment) {
+      // Try searching via the checkout reference stored in our DB
+      // Sometimes Square stores it in the note or reference
+      console.warn('checkSquarePaymentStatus: no matching Square payment found for', paymentLinkId)
+      return null
+    }
+
+    const sqStatus = matchingPayment['status'] as string | undefined
+    console.log('Square payment status check', { 
+      paymentLinkId, 
+      squarePaymentId: matchingPayment['id'],
+      status: sqStatus 
+    })
+
+    if (sqStatus === 'COMPLETED') return 'completed'
+    if (sqStatus === 'FAILED' || sqStatus === 'CANCELED' || sqStatus === 'CANCELLED') return 'failed'
+    
+    // Still pending/processing
     return null
   } catch (err) {
-    console.error('checkSquareOrderStatus error', err)
+    console.error('checkSquarePaymentStatus error', err)
     return null
   }
 }
@@ -87,7 +124,7 @@ export async function GET(req: Request) {
 
       // If still pending, try confirming directly with Square
       if (payment.status === 'pending') {
-        const squareStatus = await checkSquareOrderStatus(payment)
+        const squareStatus = await checkSquarePaymentStatus(payment)
         if (squareStatus) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabaseAdmin as any).from('payments').update({ status: squareStatus }).eq('id', paymentId)
