@@ -39,6 +39,7 @@ export async function createCheckout(locationId: string, body: any, opts?: any) 
       ...normalizedOrder,
       locationId,
     },
+    checkout_options: body.checkout_options,
   }
 
   return squareClient.checkout.paymentLinks.create(requestBody, opts)
