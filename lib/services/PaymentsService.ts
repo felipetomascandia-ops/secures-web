@@ -58,8 +58,8 @@ export class PaymentsService {
     return { checkout, checkoutUrl, checkoutId }
   }
 
-  static async createDownPaymentCheckout(scheduleId: string, amount: number, currency: string, description: string, customerEmail?: string, phone?: string) {
-    return this.createScheduleCheckout(scheduleId, amount, currency, description, customerEmail, phone)
+  static async createDownPaymentCheckout(scheduleId: string, amount: number, currency: string, description: string, customerEmail?: string, phone?: string, redirectUrl?: string) {
+    return this.createScheduleCheckout(scheduleId, amount, currency, description, customerEmail, phone, redirectUrl)
   }
 }
 
