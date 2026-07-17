@@ -27,6 +27,34 @@ function PaymentSuccessContent() {
   const [contractNumber, setContractNumber] = useState<string | null>(null)
   const [certificates, setCertificates] = useState<CertificateInfo[]>([])
   const [coverages, setCoverages] = useState<CoverageInfo[]>([])
+  const [payments, setPayments] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  const loadAllData = async (contractId: string) => {
+    try {
+      // Load certificates
+      const certRes = await fetch(`/api/contracts/${contractId}/certificates`)
+      if (certRes.ok) {
+        const certData = await certRes.json()
+        if (certData.success) {
+          setCertificates(certData.certificates || [])
+          setCoverages(certData.coverages || [])
+          setContractNumber(certData.contractNumber || null)
+        }
+      }
+
+      // Load all payments for this contract
+      const paymentsRes = await fetch(`/api/contracts/${contractId}/payments`)
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json()
+        if (paymentsData.success) {
+          setPayments(paymentsData.payments || [])
+        }
+      }
+    } catch (err) {
+      console.error('Error loading contract data:', err)
+    }
+  }
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -36,36 +64,26 @@ function PaymentSuccessContent() {
       }
 
       try {
-        // Poll for payment status
+        // Poll for payment status EVERY 2 seconds
         const interval = setInterval(async () => {
           try {
             const res = await fetch(`/api/admin/payments/success-status?paymentId=${paymentId}`)
             const data = await res.json()
 
-            // The endpoint returns { success, payment: { status } }
+            // The endpoint returns { success, payment: { status, contract_id } }
             const status = data?.payment?.status || data?.status || null
             const paymentContractId = data?.payment?.contract_id || null
 
-            if (data.success && status === 'completed') {
+            console.log('Payment status check:', { status, contractId: paymentContractId, data })
+
+            if (data.success && (status === 'completed' || status === 'active')) {
               setPaymentStatus('completed')
               clearInterval(interval)
               
-              // If we have a contract_id, fetch the certificates
+              // If we have a contract_id, load ALL data (certificates, payments, etc.)
               if (paymentContractId) {
                 setContractId(paymentContractId)
-                try {
-                  const certRes = await fetch(`/api/contracts/${paymentContractId}/certificates`)
-                  if (certRes.ok) {
-                    const certData = await certRes.json()
-                    if (certData.success) {
-                      setCertificates(certData.certificates || [])
-                      setCoverages(certData.coverages || [])
-                      setContractNumber(certData.contractNumber || null)
-                    }
-                  }
-                } catch (err) {
-                  console.error('Error fetching certificates:', err)
-                }
+                await loadAllData(paymentContractId)
               }
               
               setLoading(false)
@@ -79,13 +97,14 @@ function PaymentSuccessContent() {
           }
         }, 2000)
 
-        // Timeout after 3 minutes — show the "check your email" screen instead of spinning forever
+        // Timeout after 5 minutes — allow more time for Square to process
         setTimeout(() => {
           clearInterval(interval)
           setLoading(false)
-        }, 3 * 60 * 1000)
+        }, 5 * 60 * 1000)
       } catch (error) {
         console.error('Error:', error)
+        setError('Error verifying payment status')
         setLoading(false)
       }
     }
@@ -113,7 +132,7 @@ function PaymentSuccessContent() {
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-3xl font-bold text-white mb-4">¡Pago Exitoso!</h1>
             <p className="text-slate-300 mb-6">
-              Tu pago inicial ha sido procesado correctamente. Tu cobertura de seguro está ahora activa.
+              Tu pago ha sido procesado correctamente. Tu cobertura de seguro está ahora activa.
             </p>
             
             {/* Contract Document */}
@@ -179,12 +198,33 @@ function PaymentSuccessContent() {
               </div>
             )}
 
+            {/* All Payments */}
+            {payments.length > 0 && (
+              <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
+                <h3 className="text-lg font-semibold text-white mb-4">💳 Historial de Pagos</h3>
+                <div className="space-y-2">
+                  {payments.map((pmt, idx) => (
+                    <div key={idx} className="flex justify-between items-center rounded-lg border border-slate-700 bg-slate-800/50 p-3">
+                      <div>
+                        <p className="text-sm font-medium text-white">{pmt.description || 'Pago'}</p>
+                        <p className="text-xs text-slate-400">{new Date(pmt.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-white">${Number(pmt.amount).toFixed(2)}</p>
+                        <p className="text-xs text-emerald-400">{pmt.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
               <h3 className="text-lg font-semibold text-white mb-4">Próximos Pasos:</h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Recibirás un correo electrónico con tu contrato firmado y documentos oficiales.</span>
+                  <span>Recibirás un correo electrónico con tu contrato firmado y certificados de seguro.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
@@ -192,7 +232,7 @@ function PaymentSuccessContent() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Puedes acceder a todos tus documentos en &ldquo;Mi Panel&rdquo;.</span>
+                  <span>Puedes acceder a todos tus documentos y pagos en &ldquo;Mi Panel&rdquo;.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
