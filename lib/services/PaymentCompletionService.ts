@@ -46,6 +46,13 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
   const contractNumber = (contract.contract_number as string) || contractId
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
 
+  console.info('PaymentCompletion: Preparing certificate email', {
+    contractId,
+    clientEmail,
+    certificatesCount: certificates?.length || 0,
+    coveragesCount: coverages?.length || 0,
+  })
+
   // Build certificate links section
   const certList: string = (certificates || []).map((cert: any) => {
     const cov = (coverages || []).find((c: any) => c.id === cert.coverage_id)
@@ -68,7 +75,7 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
         <a href="${baseUrl}/api/contracts/${contractId}/document" style="color:#2563eb;">Ver / Descargar Contrato</a>
       </div>
 
-      ${certList ? `<h3>Tus certificados de seguro:</h3>${certList}` : ''}
+      ${certList ? `<h3>Tus certificados de seguro:</h3>${certList}` : '<p style="color:#64748b;">No hay certificados disponibles para este contrato.</p>'}
 
       <div style="margin:24px 0;">
         <h3>Accede a tu panel:</h3>
@@ -79,12 +86,13 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
 
   if (clientEmail) {
     try {
-      await EmailService.sendEmail(
+      console.info('PaymentCompletion: Sending certificate email', { to: clientEmail, subject: `Pago confirmado – Contrato ${contractNumber}` })
+      const result = await EmailService.sendEmail(
         clientEmail,
         `Pago confirmado – Contrato ${contractNumber} – Olimpo Coverage Group`,
         html
       )
-      console.info('PaymentCompletion: confirmation email sent', { contractId, clientEmail })
+      console.info('PaymentCompletion: confirmation email result', result)
     } catch (err) {
       console.error('PaymentCompletion: failed to send email', err)
     }
