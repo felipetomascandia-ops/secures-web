@@ -58,7 +58,12 @@ export async function GET(req: Request) {
       const isClientPayment = !!(payment.contract_id && !payment.created_by)
       if (isClientPayment) {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
-        return NextResponse.redirect(new URL(`${baseUrl}/personal-insurance/payment-success?paymentId=${paymentId}`))
+        return NextResponse.json({ 
+          success: true, 
+          payment: data,
+          redirectToClient: true,
+          clientRedirectUrl: `${baseUrl}/personal-insurance/payment-success?paymentId=${paymentId}`,
+        })
       }
       return NextResponse.json({ success: true, payment: data })
     }

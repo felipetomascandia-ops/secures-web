@@ -70,11 +70,18 @@ function PaymentSuccessContent() {
             const res = await fetch(`/api/admin/payments/success-status?paymentId=${paymentId}`)
             const data = await res.json()
 
-            // The endpoint returns { success, payment: { status, contract_id } }
+            // The endpoint returns { success, payment: { status, contract_id }, redirectToClient?, clientRedirectUrl? }
             const status = data?.payment?.status || data?.status || null
             const paymentContractId = data?.payment?.contract_id || null
 
-            console.log('Payment status check:', { status, contractId: paymentContractId, data })
+            console.log('Payment status check:', { status, contractId: paymentContractId, redirectToClient: data.redirectToClient, data })
+
+            // If the API says this is a client payment and provides a redirect URL, follow it
+            if (data.redirectToClient && data.clientRedirectUrl) {
+              console.log('Redirecting to client success page:', data.clientRedirectUrl)
+              window.location.href = data.clientRedirectUrl
+              return
+            }
 
             if (data.success && (status === 'completed' || status === 'active')) {
               setPaymentStatus('completed')
