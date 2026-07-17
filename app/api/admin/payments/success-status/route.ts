@@ -39,7 +39,15 @@ export async function GET(req: Request) {
         await (supabaseAdmin as any).from('payments').update({ status: 'completed' }).eq('id', paymentId)
         const updatedPayment = { ...payment, status: 'completed' }
         await completePaymentAndActivate(updatedPayment)
-        return NextResponse.json({ success: true, payment: { ...payment, status: 'completed' } })
+        
+        // If this is a client payment, tell the frontend to redirect to the client success page
+        const isClientPayment = !!(payment.contract_id && !payment.created_by)
+        return NextResponse.json({ 
+          success: true, 
+          payment: { ...payment, status: 'completed' },
+          redirectToClient: isClientPayment,
+          clientRedirectUrl: isClientPayment ? `/personal-insurance/payment-success?paymentId=${paymentId}` : null,
+        })
       }
 
       // If already completed but contract not activated yet
@@ -47,6 +55,11 @@ export async function GET(req: Request) {
         await completePaymentAndActivate(payment)
       }
 
+      const isClientPayment = !!(payment.contract_id && !payment.created_by)
+      if (isClientPayment) {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
+        return NextResponse.redirect(new URL(`${baseUrl}/personal-insurance/payment-success?paymentId=${paymentId}`))
+      }
       return NextResponse.json({ success: true, payment: data })
     }
 
