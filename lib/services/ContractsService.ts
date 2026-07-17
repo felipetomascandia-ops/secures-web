@@ -359,7 +359,10 @@ export class ContractsService {
       createdSchedules.push(down)
 
       const downRec = down as Record<string, unknown>
-      await PaymentsService.createDownPaymentCheckout(downRec['id'] as string, Number(downPayment), 'USD', `Down Payment for ${contractNumber}`, clientEmail, clientPhone)
+      // Pass redirectUrl to ensure customer goes to success page, not admin
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
+      const redirectUrl = `${baseUrl}/personal-insurance/payment-success`
+      await PaymentsService.createDownPaymentCheckout(downRec['id'] as string, Number(downPayment), 'USD', `Down Payment for ${contractNumber}`, clientEmail, clientPhone, redirectUrl)
     }
 
     const startDate = new Date(firstDueDate || new Date())

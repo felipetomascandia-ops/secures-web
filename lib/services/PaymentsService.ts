@@ -18,18 +18,23 @@ export class PaymentsService {
     return data
   }
 
-  static async createScheduleCheckout(scheduleId: string, amount: number, currency: string, description: string, customerEmail?: string, phone?: string) {
+  static async createScheduleCheckout(scheduleId: string, amount: number, currency: string, description: string, customerEmail?: string, phone?: string, redirectUrl?: string) {
     const locationId = process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID
     if (!locationId) {
       return { checkout: null, skipped: true }
     }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
+    // Redirect ALL customers to the personal insurance success page,
+    // NOT the admin payments page
+    const finalRedirectUrl = redirectUrl || `${baseUrl}/personal-insurance/payment-success`
 
     const checkout = await SquareService.createCheckoutLink(
       locationId,
       Math.round(amount * 100),
       currency,
       description,
-      process.env.NEXT_PUBLIC_BASE_URL
+      finalRedirectUrl
     )
 
     const checkoutUrl = (checkout as any)?.url || (checkout as any)?.checkoutUrl || null

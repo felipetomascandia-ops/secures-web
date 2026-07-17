@@ -16,7 +16,7 @@ export class SquareService {
         ],
       },
     }
-    if (redirectUrl) checkoutBody.checkoutOptions = { redirectUrl }
+    if (redirectUrl) checkoutBody.checkout_options = { redirect_url: redirectUrl }
 
     const resp = await createCheckout(locationId, checkoutBody as unknown)
     const respRec = resp as Record<string, unknown>
