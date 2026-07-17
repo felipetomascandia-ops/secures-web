@@ -60,13 +60,22 @@ export default function PaymentSuccessPage() {
           router.replace('/admin/payments')
           return
         }
-        setPayment(json.payment)
+        const payment = json.payment
+        
+        // If this is a client payment (has contract_id and no created_by),
+        // redirect to the client-facing success page instead of showing admin page
+        if (payment.contract_id && !payment.created_by) {
+          window.location.href = `/personal-insurance/payment-success?paymentId=${payment.id}`
+          return
+        }
+        
+        setPayment(payment)
         setStatus('ready')
       })
       .catch(err => {
         router.replace('/admin/payments')
       })
-  }, [])
+  }, [router])
 
   const renderStatus = () => {
     if (status === 'loading') return <p className="text-slate-300">{message}</p>
