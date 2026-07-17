@@ -53,8 +53,35 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
     coveragesCount: coverages?.length || 0,
   })
 
+  // FALLBACK: If no certificates exist but we have coverages, create them now
+  let finalCertificates = certificates || []
+  if (finalCertificates.length === 0 && coverages && coverages.length > 0) {
+    console.info('PaymentCompletion: No certificates found, creating fallback certificates from coverages', {
+      coveragesCount: coverages.length
+    })
+    
+    const newCerts: any[] = []
+    for (const cov of coverages) {
+      const certificateUrl = `${baseUrl}/api/contracts/${contractId}/certificate/${cov.id}`
+      const { data: newCert, error: insertError } = await db.from('certificates').insert({
+        contract_id: contractId,
+        coverage_id: cov.id,
+        certificate_type: cov.insurance_type || 'Insurance',
+        certificate_url: certificateUrl,
+      }).select().single()
+      
+      if (insertError) {
+        console.error('PaymentCompletion: Error creating fallback certificate', insertError)
+      } else if (newCert) {
+        console.info('PaymentCompletion: Created fallback certificate', { certificateId: newCert.id })
+        newCerts.push(newCert)
+      }
+    }
+    finalCertificates = newCerts
+  }
+
   // Build certificate links section
-  const certList: string = (certificates || []).map((cert: any) => {
+  const certList: string = finalCertificates.map((cert: any) => {
     const cov = (coverages || []).find((c: any) => c.id === cert.coverage_id)
     const label = cert.certificate_type || (cov?.insurance_type as string) || 'Insurance'
     const url = `${baseUrl}/api/contracts/${contractId}/certificate/${cert.coverage_id}`
