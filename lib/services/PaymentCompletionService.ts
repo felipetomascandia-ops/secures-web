@@ -7,8 +7,8 @@ const db = supabaseAdmin as unknown as any
 /**
  * After a payment completes (via webhook or status poll), this function:
  * 1. Marks the contract as active
- * 2. Sends an email with certificate download links
- * 3. Updates payment schedules if needed
+ * 2. Marks the down payment schedule as completed so it doesn't appear as pending
+ * 3. Sends an email with certificate download links
  */
 export async function completePaymentAndActivate(payment: Record<string, unknown>) {
   const contractId = payment.contract_id as string | null
@@ -21,6 +21,13 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
 
   // Mark contract as active
   await db.from('contracts').update({ status: 'active', policy_status: 'active' }).eq('id', contractId)
+
+  // Mark the down payment schedule as completed (sequence 0 = Down Payment)
+  await db
+    .from('payment_schedules')
+    .update({ status: 'completed', paid_at: new Date().toISOString() })
+    .eq('contract_id', contractId)
+    .eq('sequence', 0)
 
   // Load contract + coverages + certificates for the email
   const [{ data: contract }, { data: coverages }, { data: certificates }] = await Promise.all([
