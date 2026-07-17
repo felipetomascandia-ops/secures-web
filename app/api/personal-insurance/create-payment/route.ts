@@ -57,11 +57,14 @@ export async function POST(req: Request) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
+    // Use the payment-success page for personal insurance, NOT the admin payments page
     const successRedirectUrl = `${baseUrl}/personal-insurance/payment-success?paymentId=${payment.id}`
 
     // Call Square API to create checkout link
     const { createCheckout } = await import('@/lib/square')
     
+    // IMPORTANT: Square uses checkout_options (snake_case) for payment links API
+    // The redirect_url must be at the ROOT level, not inside order
     const checkoutBody = {
       idempotencyKey: `personal-${payment.id}-${Date.now()}`,
       order: {
@@ -76,9 +79,6 @@ export async function POST(req: Request) {
             },
           },
         ],
-      },
-      checkoutOptions: {
-        redirectUrl: successRedirectUrl,
       },
       checkout_options: {
         redirect_url: successRedirectUrl,
