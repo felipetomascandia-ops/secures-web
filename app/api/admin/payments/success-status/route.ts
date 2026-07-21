@@ -29,11 +29,13 @@ export async function GET(req: Request) {
       }
 
       const payment = data as Record<string, unknown>
+      console.log('Found payment in DB! Payment status:', payment.status)
 
       // If pending OR complete/completed, always execute activation logic!
       // The user arriving at this page means Square redirected them here
       // after a successful payment.
       if (payment.status === 'pending') {
+        console.log('Payment was pending! Marking as completed and activating...')
         // Mark payment as completed in our DB
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabaseAdmin as any).from('payments').update({ status: 'completed' }).eq('id', paymentId)
@@ -52,6 +54,7 @@ export async function GET(req: Request) {
 
       // If already complete OR completed but contract not activated yet
       if (payment.status === 'completed' || payment.status === 'complete') {
+        console.log('Payment is already', payment.status + '! Activating...')
         // If it's 'complete', update it to 'completed' for consistency
         if (payment.status === 'complete') {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +67,8 @@ export async function GET(req: Request) {
       }
 
       const isClientPayment = !!(payment.contract_id && !payment.created_by)
-      if (isClientPayment) {
+      // ONLY redirectToClient if payment is still pending! Otherwise just return payment data!
+      if (isClientPayment && (payment.status === 'pending')) {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
         return NextResponse.json({ 
           success: true, 
@@ -73,6 +77,7 @@ export async function GET(req: Request) {
           clientRedirectUrl: `${baseUrl}/personal-insurance/payment-success?paymentId=${paymentId}`,
         })
       }
+      // If payment is already complete/completed, just return payment data! No redirect!
       return NextResponse.json({ success: true, payment: data })
     }
 
