@@ -128,8 +128,11 @@ export async function POST(req: Request) {
       'payment.updated',
       'order.created',
       'order.updated',
+      'checkout.completed',
     ])
+    console.log('Webhook: Checking allowed event type:', eventType)
     if (!eventType || !allowed.has(eventType)) {
+      console.log('Webhook: Ignoring event type (not allowed):', eventType)
       return NextResponse.json({ success: true, ignored: true })
     }
 
@@ -140,21 +143,31 @@ export async function POST(req: Request) {
     const paymentObj =
       (object?.['payment'] as Record<string, unknown> | undefined) ??
       (object?.['order'] as Record<string, unknown> | undefined) ??
+      (object?.['checkout'] as Record<string, unknown> | undefined) ??
       null
+
+    console.log('Webhook: Extracted paymentObj/checkoutObj:', paymentObj)
 
     const rawStatus =
       (paymentObj?.['status'] as string) ??
       (object?.['status'] as string) ??
       null
 
-    // payment_link_id is set on payment objects created through a payment link
+    // Extract squareLinkId from all possible places
     const squareLinkId =
       (paymentObj?.['payment_link_id'] as string | undefined) ??
       (paymentObj?.['checkout_id'] as string | undefined) ??
       (paymentObj?.['checkoutId'] as string | undefined) ??
+      (object?.['checkout_id'] as string | undefined) ??
+      (object?.['id'] as string | undefined) ?? // For checkout.completed events
       null
 
-    const squarePaymentId = paymentObj?.['id'] as string | undefined
+    console.log('Webhook: Extracted squareLinkId:', squareLinkId)
+
+    const squarePaymentId =
+      (paymentObj?.['id'] as string | undefined) ??
+      (object?.['payment_id'] as string | undefined) ??
+      null
 
     console.info('Square webhook parsed', { eventType, squareLinkId, squarePaymentId, rawStatus })
 
