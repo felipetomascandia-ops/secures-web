@@ -132,39 +132,80 @@ const buildCoveragePayload = (coverage: any, contractId: string) => {
     return Number.isFinite(num) ? num : null
   }
 
-  return {
+  // Create base payload with only the most essential fields
+  const payload: Record<string, any> = {
     contract_id: contractId,
     insurance_type: coverage.insuranceType,
     policy_number: coverage.policyNumber,
     effective_date: coverage.effectiveDate,
     expiration_date: coverage.expirationDate,
     coverage_details: coverage.coverageDetails || null,
-    coverage_limit: parseNumber(coverage.coverageLimit),
-    each_occurrence: parseNumber(coverage.eachOccurrence),
-    damage_to_rented_premises: parseNumber(coverage.damageToRentedPremises),
-    med_exp: parseNumber(coverage.medExp),
-    personal_adv_injury: parseNumber(coverage.personalAdvInjury),
-    products_completed_ops_agg: parseNumber(coverage.productsCompletedOpsAgg),
-    combined_single_limit: parseNumber(coverage.combinedSingleLimit),
-    bodily_injury_per_person: parseNumber(coverage.bodilyInjuryPerPerson),
-    bodily_injury_per_accident: parseNumber(coverage.bodilyInjuryPerAccident),
-    property_damage_per_accident: parseNumber(coverage.propertyDamagePerAccident),
-    el_each_accident: parseNumber(coverage.elEachAccident),
-    el_disease_ea_employee: parseNumber(coverage.elDiseaseEaEmployee),
-    el_disease_policy_limit: parseNumber(coverage.elDiseasePolicyLimit),
-    general_aggregate: parseNumber(coverage.generalAggregate),
     deductible: parseNumber(coverage.deductible),
     insured_name: coverage.insuredName,
-    auto_any_auto: coverage.autoAnyAuto,
-    auto_owned_auto: coverage.autoOwnedAuto,
-    auto_hired_autos_only: coverage.autoHiredAutosOnly,
-    auto_non_owned_autos_only: coverage.autoNonOwnedAutosOnly,
-    auto_scheduled_autos: coverage.autoScheduledAutos,
-    property_building_limit: parseNumber(coverage.propertyBuildingLimit),
-    property_personal_property_limit: parseNumber(coverage.propertyPersonalPropertyLimit),
-    certificate_holder_name: coverage.certificateHolderName || null,
-    certificate_holder_address: coverage.certificateHolderAddress || null,
   }
+
+  // Add optional fields only if they are provided in coverage
+  const optionalFields = [
+    'coverageLimit',
+    'eachOccurrence',
+    'damageToRentedPremises',
+    'medExp',
+    'personalAdvInjury',
+    'productsCompletedOpsAgg',
+    'combinedSingleLimit',
+    'bodilyInjuryPerPerson',
+    'bodilyInjuryPerAccident',
+    'propertyDamagePerAccident',
+    'elEachAccident',
+    'elDiseaseEaEmployee',
+    'elDiseasePolicyLimit',
+    'generalAggregate',
+    'autoAnyAuto',
+    'autoOwnedAuto',
+    'autoHiredAutosOnly',
+    'autoNonOwnedAutosOnly',
+    'autoScheduledAutos',
+    'propertyBuildingLimit',
+    'propertyPersonalPropertyLimit',
+  ]
+
+  // Map camelCase to snake_case
+  const fieldMap: Record<string, string> = {
+    coverageLimit: 'coverage_limit',
+    eachOccurrence: 'each_occurrence',
+    damageToRentedPremises: 'damage_to_rented_premises',
+    medExp: 'med_exp',
+    personalAdvInjury: 'personal_adv_injury',
+    productsCompletedOpsAgg: 'products_completed_ops_agg',
+    combinedSingleLimit: 'combined_single_limit',
+    bodilyInjuryPerPerson: 'bodily_injury_per_person',
+    bodilyInjuryPerAccident: 'bodily_injury_per_accident',
+    propertyDamagePerAccident: 'property_damage_per_accident',
+    elEachAccident: 'el_each_accident',
+    elDiseaseEaEmployee: 'el_disease_ea_employee',
+    elDiseasePolicyLimit: 'el_disease_policy_limit',
+    generalAggregate: 'general_aggregate',
+    autoAnyAuto: 'auto_any_auto',
+    autoOwnedAuto: 'auto_owned_auto',
+    autoHiredAutosOnly: 'auto_hired_autos_only',
+    autoNonOwnedAutosOnly: 'auto_non_owned_autos_only',
+    autoScheduledAutos: 'auto_scheduled_autos',
+    propertyBuildingLimit: 'property_building_limit',
+    propertyPersonalPropertyLimit: 'property_personal_property_limit',
+  }
+
+  optionalFields.forEach((field) => {
+    if (coverage[field] !== undefined && coverage[field] !== null) {
+      const snakeField = fieldMap[field] || field
+      if (snakeField.includes('limit') || snakeField.includes('aggregate') || snakeField.includes('occurrence') || snakeField.includes('deductible')) {
+        payload[snakeField] = parseNumber(coverage[field])
+      } else {
+        payload[snakeField] = coverage[field]
+      }
+    }
+  })
+
+  return payload
 }
 
 const getAgentSignatureDataURL = () => {
