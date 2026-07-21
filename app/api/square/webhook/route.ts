@@ -257,12 +257,21 @@ export async function POST(req: Request) {
       await completePaymentAndActivate(paymentToActivate)
     }
 
+    let paymentId: string | null = null
+    if (paymentResult.type === 'payment') {
+      paymentId = paymentResult.data.id as string
+    } else if (paymentResult.type === 'schedule') {
+      paymentId = paymentResult.data.id as string
+    } else if (paymentResult.type === 'square_payment') {
+      paymentId = paymentResult.data.id as string
+    }
+
     return NextResponse.json({
       success: true,
       processed: true,
       eventType,
       newStatus,
-      paymentId: paymentRecord.id,
+      paymentId,
     })
   } catch (err: unknown) {
     console.error('square webhook error', err)
