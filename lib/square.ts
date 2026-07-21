@@ -34,15 +34,26 @@ export async function createCheckout(locationId: string, body: any, opts?: any) 
 
   const normalizedOrder = body?.order?.order ? body.order.order : body?.order
   const requestBody = {
-    ...body,
+    // add both snake and camel for all fields to cover all SDK versions
+    idempotencyKey: body.idempotencyKey || body.idempotency_key,
+    idempotency_key: body.idempotency_key || body.idempotencyKey,
     order: {
       ...normalizedOrder,
       locationId,
+      location_id: locationId,
+      lineItems: normalizedOrder?.lineItems || normalizedOrder?.line_items,
+      line_items: normalizedOrder?.line_items || normalizedOrder?.lineItems,
     },
-    checkout_options: body.checkout_options,
+    checkoutOptions: body.checkoutOptions || body.checkout_options,
+    checkout_options: body.checkout_options || body.checkoutOptions,
   }
 
-  return squareClient.checkout.paymentLinks.create(requestBody, opts)
+  console.log("Square createCheckout Request Body:");
+  console.dir(requestBody, { depth: null });
+  const response = await squareClient.checkout.paymentLinks.create(requestBody, opts);
+  console.log("Square createCheckout Raw Response:");
+  console.dir(response, { depth: null });
+  return response;
 }
 
 export default squareClient
