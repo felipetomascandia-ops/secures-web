@@ -19,6 +19,17 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
 
   console.info('PaymentCompletion: Activating contract', { contractId, paymentId: payment.id })
 
+  // First check if contract is already active
+  const { data: existingContract, error: checkError } = await db.from('contracts').select('*').eq('id', contractId).single()
+  if (checkError) {
+    console.error('PaymentCompletion: Error checking contract status:', checkError)
+  }
+
+  if (existingContract && (existingContract.status === 'active' || existingContract.policy_status === 'active')) {
+    console.info('PaymentCompletion: Contract is already active, skipping activation and email!', { contractId })
+    return
+  }
+
   // Mark contract as active
   await db.from('contracts').update({ status: 'active', policy_status: 'active' }).eq('id', contractId)
 
