@@ -89,7 +89,7 @@ function PaymentSuccessContent() {
               return
             }
 
-            if (data.success && (status === 'completed' || status === 'complete' || status === 'active')) {
+            if (data.success && (status === 'complete' || status === 'completed' || status === 'active')) {
               setPaymentStatus('completed')
               clearInterval(interval)
               

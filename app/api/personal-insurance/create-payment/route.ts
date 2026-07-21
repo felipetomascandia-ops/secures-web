@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     // Call Square API to create checkout link
     const { createCheckout } = await import('@/lib/square')
     
-    // Square SDK 44.x expects camelCase parameters
+    // IMPORTANT: Square uses checkout_options (snake_case) at top level for payment links API
     const checkoutBody = {
       idempotencyKey: `personal-${payment.id}-${Date.now()}`,
       order: {
@@ -79,19 +79,14 @@ export async function POST(req: Request) {
           },
         ],
       },
-      checkoutOptions: {
-        redirectUrl: successRedirectUrl,
+      checkout_options: {
+        redirect_url: successRedirectUrl,
       },
     }
-
-    console.log('Square Request:');
-    console.dir(checkoutBody, { depth: null });
 
     let resp: unknown
     try {
       resp = await createCheckout(locationId, checkoutBody)
-      console.log('Square Response:');
-      console.dir(resp, { depth: null });
     } catch (error) {
       console.error('Square checkout error:', error)
       // Clean up payment record

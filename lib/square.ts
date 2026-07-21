@@ -39,16 +39,10 @@ export async function createCheckout(locationId: string, body: any, opts?: any) 
       ...normalizedOrder,
       locationId,
     },
-    // Use camelCase as SDK 44.x expects
-    checkoutOptions: body.checkoutOptions || body.checkout_options,
+    checkout_options: body.checkout_options,
   }
 
-  console.log("Square createCheckout Request Body:");
-  console.dir(requestBody, { depth: null });
-  const response = await squareClient.checkout.paymentLinks.create(requestBody, opts);
-  console.log("Square createCheckout Raw Response:");
-  console.dir(response, { depth: null });
-  return response;
+  return squareClient.checkout.paymentLinks.create(requestBody, opts)
 }
 
 export default squareClient
