@@ -632,8 +632,8 @@ export default function PersonalInsurancePage() {
       const plan = selectedPlan
       const insuranceType = personalInsuranceTypes.find(i => i.key === selectedInsurance)!
 
-      // Preparar las coberturas del plan seleccionado
-      const selectedCoverages = plan.coverages.map(coverage => ({
+      // Preparar una única cobertura para el seguro personal
+      const selectedCoverages = [{
         insuranceType: selectedInsurance,
         policyNumber: `PA-P-${Date.now()}`,
         effectiveDate: new Date().toISOString().split('T')[0],
@@ -641,8 +641,8 @@ export default function PersonalInsurancePage() {
         deductible: plan.deductible.toString(),
         coverageLimit: getCoverageLimit(selectedInsurance, plan),
         insuredName: `${formData.firstName} ${formData.lastName}`,
-        coverageDetails: coverage.en // Agregar detalles de la cobertura
-      }))
+        coverageDetails: plan.coverages.map((c: { en: string }) => c.en).join(', ') // Unir todas las descripciones en una sola
+      }]
 
       console.log('Creating contract with coverages:', selectedCoverages)
 

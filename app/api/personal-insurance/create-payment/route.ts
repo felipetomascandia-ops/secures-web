@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     // Call Square API to create checkout link
     const { createCheckout } = await import('@/lib/square')
     
-    // IMPORTANT: Square uses checkout_options (snake_case) inside order for payment links API
+    // IMPORTANT: Square uses checkout_options (snake_case) at top level for payment links API
     const checkoutBody = {
       idempotencyKey: `personal-${payment.id}-${Date.now()}`,
       order: {
@@ -78,9 +78,9 @@ export async function POST(req: Request) {
             },
           },
         ],
-        checkout_options: {
-          redirect_url: successRedirectUrl,
-        },
+      },
+      checkout_options: {
+        redirect_url: successRedirectUrl,
       },
     }
 

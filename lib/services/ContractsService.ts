@@ -288,6 +288,7 @@ export class ContractsService {
     for (let i = 0; i < coverages.length; i++) {
       const coverage = coverages[i]
       try {
+        console.log(`ContractsService: Coverage ${i + 1}/${coverages.length} raw coverage`, coverage)
         const coveragePayload = buildCoveragePayload({ ...coverage, policyNumber: finalPolicyNumber }, contractId)
         console.log(`ContractsService: Coverage ${i + 1}/${coverages.length} payload`, coveragePayload)
         
@@ -296,7 +297,7 @@ export class ContractsService {
         console.log(`ContractsService: Coverage ${i + 1}/${coverages.length} insert result`, { data: covData, error: covError })
         
         if (covError) {
-          console.error(`ContractsService: Error inserting coverage ${i + 1}:`, covError)
+          console.error(`ContractsService: Error inserting coverage ${i + 1}:`, JSON.stringify(covError, null, 2))
           continue
         }
         
@@ -310,17 +311,19 @@ export class ContractsService {
         
         // Create certificate entry for each coverage
         const certificateUrl = `${baseUrl}/api/contracts/${contractId}/certificate/${covData.id}`
-        const { error: certError } = await (db as unknown as any).from('certificates').insert({
+        const certificateData = {
           contract_id: contractId,
           coverage_id: covData.id,
-          certificate_type: coverage.insuranceType,
+          certificate_type: coverage.insuranceType || coverage.insurance_type || 'insurance',
           certificate_url: certificateUrl,
-        })
+        }
+        console.log(`ContractsService: Inserting certificate ${i + 1}/${coverages.length}`, certificateData)
+        const { data: certData, error: certError } = await (db as unknown as any).from('certificates').insert(certificateData).select().single()
         
         if (certError) {
-          console.error(`ContractsService: Error creating certificate for coverage ${i + 1}:`, certError)
+          console.error(`ContractsService: Error creating certificate for coverage ${i + 1}:`, JSON.stringify(certError, null, 2))
         } else {
-          console.log(`ContractsService: Certificate created for coverage ${i + 1}`)
+          console.log(`ContractsService: Certificate created for coverage ${i + 1}`, certData)
         }
       } catch (err) {
         console.error(`ContractsService: Exception inserting coverage ${i + 1}:`, err)
