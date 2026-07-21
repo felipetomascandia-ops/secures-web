@@ -55,6 +55,11 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
 
   // FALLBACK: If no certificates exist but we have coverages, create them now
   let finalCertificates = certificates || []
+  console.info('PaymentCompletion: Checking certificates', {
+    existingCertificatesCount: finalCertificates.length,
+    existingCoveragesCount: coverages?.length || 0,
+    coverages
+  })
   if (finalCertificates.length === 0 && coverages && coverages.length > 0) {
     console.info('PaymentCompletion: No certificates found, creating fallback certificates from coverages', {
       coveragesCount: coverages.length
@@ -62,22 +67,33 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
     
     const newCerts: any[] = []
     for (const cov of coverages) {
+      console.info('PaymentCompletion: Creating certificate for coverage', { coverageId: cov.id, contractId })
       const certificateUrl = `${baseUrl}/api/contracts/${contractId}/certificate/${cov.id}`
-      const { data: newCert, error: insertError } = await db.from('certificates').insert({
+      const certificateData = {
         contract_id: contractId,
         coverage_id: cov.id,
         certificate_type: cov.insurance_type || 'Insurance',
         certificate_url: certificateUrl,
-      }).select().single()
+      }
+      console.info('PaymentCompletion: Certificate data to insert', certificateData)
+      const { data: newCert, error: insertError } = await db.from('certificates').insert(certificateData).select().single()
       
       if (insertError) {
-        console.error('PaymentCompletion: Error creating fallback certificate', insertError)
+        console.error('PaymentCompletion: Error creating fallback certificate', JSON.stringify(insertError, null, 2))
       } else if (newCert) {
-        console.info('PaymentCompletion: Created fallback certificate', { certificateId: newCert.id })
+        console.info('PaymentCompletion: Created fallback certificate successfully', { certificateId: newCert.id, newCert })
         newCerts.push(newCert)
+      } else {
+        console.warn('PaymentCompletion: No data returned from certificate insert', { coverageId: cov.id })
       }
     }
     finalCertificates = newCerts
+    console.info('PaymentCompletion: Final certificates after creation', finalCertificates)
+  } else {
+    console.info('PaymentCompletion: Skipping fallback certificate creation', {
+      hasCertificates: finalCertificates.length > 0,
+      hasCoverages: coverages && coverages.length > 0
+    })
   }
 
   // Build certificate links section
