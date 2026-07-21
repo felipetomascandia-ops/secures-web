@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
       const payment = data as Record<string, unknown>
 
-      // If pending OR completed, always execute activation logic.
+      // If pending OR complete/completed, always execute activation logic!
       // The user arriving at this page means Square redirected them here
       // after a successful payment.
       if (payment.status === 'pending') {
@@ -50,9 +50,17 @@ export async function GET(req: Request) {
         })
       }
 
-      // If already completed but contract not activated yet
-      if (payment.status === 'completed') {
-        await completePaymentAndActivate(payment)
+      // If already complete OR completed but contract not activated yet
+      if (payment.status === 'completed' || payment.status === 'complete') {
+        // If it's 'complete', update it to 'completed' for consistency
+        if (payment.status === 'complete') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabaseAdmin as any).from('payments').update({ status: 'completed' }).eq('id', paymentId)
+          const updatedPayment = { ...payment, status: 'completed' }
+          await completePaymentAndActivate(updatedPayment)
+        } else {
+          await completePaymentAndActivate(payment)
+        }
       }
 
       const isClientPayment = !!(payment.contract_id && !payment.created_by)

@@ -144,7 +144,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, notFound: true })
     }
 
-    // Update payment status
+    // Update payment status to 'completed' (for consistency) even if it was 'complete'
     const { error: updateError } = await db
       .from('payments')
       .update({
@@ -163,9 +163,10 @@ export async function POST(req: Request) {
       })
     }
 
-    // Post-payment actions when completed
-    if (newStatus === 'completed') {
-      await completePaymentAndActivate(paymentRecord)
+    // Post-payment actions when completed or complete
+    if (newStatus === 'completed' || paymentRecord.status === 'complete') {
+      const paymentToUse = newStatus === 'completed' ? { ...paymentRecord, status: newStatus } : paymentRecord
+      await completePaymentAndActivate(paymentToUse)
     }
 
     return NextResponse.json({
