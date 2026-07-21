@@ -30,11 +30,20 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
     .eq('sequence', 0)
 
   // Load contract + coverages + certificates for the email
-  const [{ data: contract }, { data: coverages }, { data: certificates }] = await Promise.all([
+  console.log('PaymentCompletion: Fetching contract, coverages, certificates for contractId:', contractId)
+  const [contractResult, coveragesResult, certificatesResult] = await Promise.all([
     db.from('contracts').select('*').eq('id', contractId).single(),
     db.from('coverages').select('*').eq('contract_id', contractId),
     db.from('certificates').select('*').eq('contract_id', contractId),
   ])
+  const { data: contract, error: contractError } = contractResult
+  const { data: coverages, error: coveragesError } = coveragesResult
+  const { data: certificates, error: certificatesError } = certificatesResult
+
+  if (contractError) console.error('PaymentCompletion: Error fetching contract:', contractError)
+  if (coveragesError) console.error('PaymentCompletion: Error fetching coverages:', coveragesError)
+  if (certificatesError) console.error('PaymentCompletion: Error fetching certificates:', certificatesError)
+  console.log('PaymentCompletion: Fetched data:', { contract, coverages, certificates })
 
   if (!contract) {
     console.warn('PaymentCompletion: Contract not found', contractId)
