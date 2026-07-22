@@ -31,90 +31,97 @@ export async function completePaymentAndActivate(payment: Record<string, unknown
   }
 
   // Mark contract as active
-  await db.from('contracts').update({ status: 'active', policy_status: 'active' }).eq('id', contractId)
+    await db.from('contracts').update({ status: 'active', policy_status: 'active' }).eq('id', contractId)
 
-  // Mark the down payment schedule as completed (sequence 0 = Down Payment)
-  await db
-    .from('payment_schedules')
-    .update({ status: 'completed', paid_at: new Date().toISOString() })
-    .eq('contract_id', contractId)
-    .eq('sequence', 0)
+    // Load contract + coverages + certificates first
+    console.log('PaymentCompletion: Fetching contract, coverages, certificates for contractId:', contractId)
+    const [contractResult, coveragesResult, certificatesResult] = await Promise.all([
+      db.from('contracts').select('*').eq('id', contractId).single(),
+      db.from('coverages').select('*').eq('contract_id', contractId),
+      db.from('certificates').select('*').eq('contract_id', contractId),
+    ])
+    const { data: contract, error: contractError } = contractResult
+    const { data: coverages, error: coveragesError } = coveragesResult
+    const { data: certificates, error: certificatesError } = certificatesResult
 
-  // Load contract + coverages + certificates for the email
-  console.log('PaymentCompletion: Fetching contract, coverages, certificates for contractId:', contractId)
-  const [contractResult, coveragesResult, certificatesResult] = await Promise.all([
-    db.from('contracts').select('*').eq('id', contractId).single(),
-    db.from('coverages').select('*').eq('contract_id', contractId),
-    db.from('certificates').select('*').eq('contract_id', contractId),
-  ])
-  const { data: contract, error: contractError } = contractResult
-  const { data: coverages, error: coveragesError } = coveragesResult
-  const { data: certificates, error: certificatesError } = certificatesResult
+    if (contractError) console.error('PaymentCompletion: Error fetching contract:', contractError)
+    if (coveragesError) console.error('PaymentCompletion: Error fetching coverages:', coveragesError)
+    if (certificatesError) console.error('PaymentCompletion: Error fetching certificates:', certificatesError)
+    console.log('PaymentCompletion: Fetched data:', { contract, coverages, certificates })
 
-  if (contractError) console.error('PaymentCompletion: Error fetching contract:', contractError)
-  if (coveragesError) console.error('PaymentCompletion: Error fetching coverages:', coveragesError)
-  if (certificatesError) console.error('PaymentCompletion: Error fetching certificates:', certificatesError)
-  console.log('PaymentCompletion: Fetched data:', { contract, coverages, certificates })
-
-  if (!contract) {
-    console.warn('PaymentCompletion: Contract not found', contractId)
-    return
-  }
-
-  const clientEmail = (contract.client_email as string) || ''
-  const clientName = (contract.client_company_name as string) || (contract.client_name as string) || 'there'
-  const contractNumber = (contract.contract_number as string) || contractId
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
-
-  console.info('PaymentCompletion: Preparing certificate email', {
-    contractId,
-    clientEmail,
-    certificatesCount: certificates?.length || 0,
-    coveragesCount: coverages?.length || 0,
-  })
-
-  // FALLBACK: If no certificates exist but we have coverages, create them now
-  let finalCertificates = certificates || []
-  console.info('PaymentCompletion: Checking certificates', {
-    existingCertificatesCount: finalCertificates.length,
-    existingCoveragesCount: coverages?.length || 0,
-    coverages
-  })
-  if (finalCertificates.length === 0 && coverages && coverages.length > 0) {
-    console.info('PaymentCompletion: No certificates found, creating fallback certificates from coverages', {
-      coveragesCount: coverages.length
-    })
-    
-    const newCerts: any[] = []
-    for (const cov of coverages) {
-      console.info('PaymentCompletion: Creating certificate for coverage', { coverageId: cov.id, contractId })
-      const certificateUrl = `${baseUrl}/api/contracts/${contractId}/certificate/${cov.id}`
-      const certificateData = {
-        contract_id: contractId,
-        coverage_id: cov.id,
-        certificate_type: cov.insurance_type || 'Insurance',
-        certificate_url: certificateUrl,
-      }
-      console.info('PaymentCompletion: Certificate data to insert', certificateData)
-      const { data: newCert, error: insertError } = await db.from('certificates').insert(certificateData).select().single()
-      
-      if (insertError) {
-        console.error('PaymentCompletion: Error creating fallback certificate', JSON.stringify(insertError, null, 2))
-      } else if (newCert) {
-        console.info('PaymentCompletion: Created fallback certificate successfully', { certificateId: newCert.id, newCert })
-        newCerts.push(newCert)
-      } else {
-        console.warn('PaymentCompletion: No data returned from certificate insert', { coverageId: cov.id })
-      }
+    if (!contract) {
+      console.warn('PaymentCompletion: Contract not found', contractId)
+      return
     }
-    finalCertificates = newCerts
-    console.info('PaymentCompletion: Final certificates after creation', finalCertificates)
-  } else {
-    console.info('PaymentCompletion: Skipping fallback certificate creation', {
-      hasCertificates: finalCertificates.length > 0,
-      hasCoverages: coverages && coverages.length > 0
+
+    // FALLBACK: If no certificates exist but we have coverages, create them now BEFORE checking emails!
+    let finalCertificates = certificates || []
+    console.info('PaymentCompletion: Checking certificates', {
+      existingCertificatesCount: finalCertificates.length,
+      existingCoveragesCount: coverages?.length || 0,
+      coverages
     })
-  }
+    if (finalCertificates.length === 0 && coverages && coverages.length > 0) {
+      console.info('PaymentCompletion: No certificates found, creating fallback certificates from coverages', {
+        coveragesCount: coverages.length
+      })
+      
+      const newCerts: any[] = []
+      for (const cov of coverages) {
+        console.info('PaymentCompletion: Creating certificate for coverage', { coverageId: cov.id, contractId })
+        const certificateUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'}/api/contracts/${contractId}/certificate/${cov.id}`
+        const certificateData = {
+          contract_id: contractId,
+          coverage_id: cov.id,
+          certificate_type: cov.insurance_type || 'Insurance',
+          certificate_url: certificateUrl,
+        }
+        console.info('PaymentCompletion: Certificate data to insert', certificateData)
+        const { data: newCert, error: insertError } = await db.from('certificates').insert(certificateData).select().single()
+        
+        if (insertError) {
+          console.error('PaymentCompletion: Error creating fallback certificate', JSON.stringify(insertError, null, 2))
+        } else if (newCert) {
+          console.info('PaymentCompletion: Created fallback certificate successfully', { certificateId: newCert.id, newCert })
+          newCerts.push(newCert)
+        } else {
+          console.warn('PaymentCompletion: No data returned from certificate insert', { coverageId: cov.id })
+        }
+      }
+      finalCertificates = newCerts
+      console.info('PaymentCompletion: Final certificates after creation', finalCertificates)
+    } else {
+      console.info('PaymentCompletion: Skipping fallback certificate creation', {
+        hasCertificates: finalCertificates.length > 0,
+        hasCoverages: coverages && coverages.length > 0
+      })
+    }
+
+    // Mark the down payment schedule as completed (sequence 0 = Down Payment)
+    console.info('PaymentCompletion: Marking down payment schedule as completed for contract', contractId)
+    const { error: scheduleUpdateError } = await db
+      .from('payment_schedules')
+      .update({ status: 'completed', paid_at: new Date().toISOString() })
+      .eq('contract_id', contractId)
+      .eq('sequence', 0)
+    
+    if (scheduleUpdateError) {
+      console.error('PaymentCompletion: Error updating payment_schedule', scheduleUpdateError)
+    } else {
+      console.info('PaymentCompletion: Successfully updated down payment_schedule')
+    }
+
+    const clientEmail = (contract.client_email as string) || ''
+    const clientName = (contract.client_company_name as string) || (contract.client_name as string) || 'there'
+    const contractNumber = (contract.contract_number as string) || contractId
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
+
+    console.info('PaymentCompletion: Preparing certificate email', {
+      contractId,
+      clientEmail,
+      certificatesCount: finalCertificates.length,
+      coveragesCount: coverages?.length || 0,
+    })
 
   // Build certificate links section
   const certList: string = finalCertificates.map((cert: any) => {
