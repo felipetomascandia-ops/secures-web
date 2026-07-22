@@ -27,7 +27,7 @@ export class PaymentsService {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
     // Redirect ALL customers to the personal insurance success page,
     // NOT the admin payments page
-    const finalRedirectUrl = redirectUrl || `${baseUrl}/personal-insurance/payment-success`
+    const finalRedirectUrl = redirectUrl || `${baseUrl}/personal-insurance/payment-success?scheduleId=${scheduleId}`
 
     const checkout = await SquareService.createCheckoutLink(
       locationId,

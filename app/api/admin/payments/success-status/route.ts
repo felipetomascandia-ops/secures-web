@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const paymentId = url.searchParams.get('paymentId')
+    const scheduleId = url.searchParams.get('scheduleId')
     const checkoutId =
       url.searchParams.get('checkoutId') ||
       url.searchParams.get('checkout_id') ||
@@ -18,8 +19,64 @@ export async function GET(req: Request) {
       url.searchParams.get('order_id') ||
       null
 
-    if (!paymentId && !checkoutId) {
-      return NextResponse.json({ success: false, message: 'paymentId or checkoutId is required' }, { status: 400 })
+    if (!paymentId && !checkoutId && !scheduleId) {
+      return NextResponse.json({ success: false, message: 'paymentId, scheduleId, or checkoutId is required' }, { status: 400 })
+    }
+
+    // Handle scheduleId first if provided
+    if (scheduleId) {
+      const { data: schedule, error: scheduleError } = await supabaseAdmin
+        .from('payment_schedules')
+        .select('*')
+        .eq('id', scheduleId)
+        .single<Record<string, unknown>>()
+
+      if (scheduleError || !schedule) {
+        return NextResponse.json({ success: false, message: 'Schedule not found', error: scheduleError }, { status: 404 })
+      }
+
+      console.log('Found payment schedule in DB! Schedule status:', schedule.status)
+
+      if (schedule.status === 'pending') {
+        console.log('Schedule was pending! Marking as completed and activating...')
+        await (supabaseAdmin as any)
+          .from('payment_schedules')
+          .update({ status: 'completed', paid_at: new Date().toISOString() })
+          .eq('id', scheduleId)
+      }
+
+      // Always call completePaymentAndActivate for scheduleId (even if already completed)
+      const schedulePayment = {
+        id: schedule.id as string,
+        contract_id: schedule.contract_id as string | null,
+        status: 'completed',
+      }
+      if (schedule.contract_id) {
+        await completePaymentAndActivate(schedulePayment)
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
+      return NextResponse.json({
+        success: true,
+        payment: {
+          id: schedule.id as string,
+          square_checkout_id: schedule.checkout_id as string | null,
+          square_url: schedule.checkout_url as string | null,
+          amount: Number(schedule.amount) || 0,
+          currency: 'USD',
+          status: 'completed',
+          customer: 'Scheduled payment',
+          email: '',
+          phone: null,
+          description: null,
+          contract_id: schedule.contract_id as string | null,
+          created_by: null,
+          expires_at: schedule.due_date as string | null,
+          created_at: (schedule.created_at as string) || '',
+        },
+        redirectToClient: true,
+        clientRedirectUrl: `${baseUrl}/personal-insurance/payment-success?scheduleId=${scheduleId}`,
+      })
     }
 
     if (paymentId) {
@@ -104,6 +161,24 @@ export async function GET(req: Request) {
 
     if (!scheduleQuery.error && scheduleQuery.data) {
       const schedule = scheduleQuery.data as Record<string, unknown>
+      
+      console.log('Found schedule via checkoutId, status:', schedule.status)
+      if (schedule.status === 'pending') {
+        await (supabaseAdmin as any)
+          .from('payment_schedules')
+          .update({ status: 'completed', paid_at: new Date().toISOString() })
+          .eq('id', schedule.id)
+      }
+      
+      if (schedule.contract_id) {
+        const schedulePayment = {
+          id: schedule.id as string,
+          contract_id: schedule.contract_id as string,
+          status: 'completed',
+        }
+        await completePaymentAndActivate(schedulePayment)
+      }
+
       return NextResponse.json({
         success: true,
         payment: {
@@ -112,7 +187,7 @@ export async function GET(req: Request) {
           square_url: schedule.checkout_url as string | null,
           amount: Number(schedule.amount) || 0,
           currency: 'USD',
-          status: (schedule.status as string) || 'pending',
+          status: 'completed',
           customer: 'Scheduled payment',
           email: '',
           phone: null,

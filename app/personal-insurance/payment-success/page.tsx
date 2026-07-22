@@ -21,6 +21,7 @@ interface CoverageInfo {
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const paymentId = searchParams.get('paymentId')
+  const scheduleId = searchParams.get('scheduleId')
   const [loading, setLoading] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
   const [contractId, setContractId] = useState<string | null>(null)
@@ -64,23 +65,27 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
-      if (!paymentId) {
+      if (!paymentId && !scheduleId) {
         setLoading(false)
         return
       }
+
+      const params = new URLSearchParams()
+      if (paymentId) params.set('paymentId', paymentId)
+      if (scheduleId) params.set('scheduleId', scheduleId)
 
       try {
         // Poll for payment status EVERY 2 seconds
         const interval = setInterval(async () => {
           try {
-            const res = await fetch(`/api/admin/payments/success-status?paymentId=${paymentId}`)
+            const res = await fetch(`/api/admin/payments/success-status?${params.toString()}`)
             const data = await res.json()
 
             // The endpoint returns { success, payment: { status, contract_id }, redirectToClient?, clientRedirectUrl? }
             const status = data?.payment?.status || data?.status || null
             const paymentContractId = data?.payment?.contract_id || null
 
-            console.log('Payment status check:', { status, contractId: paymentContractId, redirectToClient: data.redirectToClient, data })
+            console.log('Payment/Schedule status check:', { status, contractId: paymentContractId, redirectToClient: data.redirectToClient, data })
 
             // If the API says this is a client payment and provides a redirect URL, follow it
             if (data.redirectToClient && data.clientRedirectUrl) {
@@ -106,7 +111,7 @@ function PaymentSuccessContent() {
               setLoading(false)
             }
           } catch (error) {
-            console.error('Error checking payment status:', error)
+            console.error('Error checking payment/schedule status:', error)
           }
         }, 2000)
 
@@ -123,7 +128,7 @@ function PaymentSuccessContent() {
     }
 
     checkPaymentStatus()
-  }, [paymentId])
+  }, [paymentId, scheduleId])
 
   if (loading) {
     return (
