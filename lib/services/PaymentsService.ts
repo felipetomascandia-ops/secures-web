@@ -6,13 +6,18 @@ const db: any = supabaseAdmin as any
 
 export class PaymentsService {
   static async createScheduleItem(contractId: string, sequence: number, label: string, amount: number, dueDate?: string) {
-    const { data, error } = await (db as unknown as any).from('payment_schedules').insert({
+    const { data, error } = await (db as unknown as any).from('payments').insert({
       contract_id: contractId,
       sequence,
       label,
       amount,
       due_date: dueDate || null,
       status: 'pending',
+      customer: '',
+      email: '',
+      phone: null,
+      description: null,
+      currency: 'USD',
     } as any).select().single()
     if (error) throw error
     return data
@@ -40,13 +45,13 @@ export class PaymentsService {
     const checkoutUrl = (checkout as any)?.url || (checkout as any)?.checkoutUrl || null
     const checkoutId = (checkout as any)?.id || null
 
-    await (db as unknown as any).from('payment_schedules').update({
-      checkout_id: checkoutId,
-      checkout_url: checkoutUrl,
+    await (db as unknown as any).from('payments').update({
+      square_checkout_id: checkoutId,
+      square_url: checkoutUrl,
     }).eq('id', scheduleId)
 
     await (db as unknown as any).from('square_payments').insert({
-      schedule_id: scheduleId,
+      payment_id: scheduleId, // use payment_id instead of schedule_id now
       square_checkout_id: checkoutId,
       square_payment_id: null,
       receipt_url: null,

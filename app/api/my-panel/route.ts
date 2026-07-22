@@ -42,7 +42,7 @@ export async function GET(req: Request) {
       { data: allContracts, error: allContractsError }
     ] = await Promise.all([
       contractsQuery,
-      supabaseAdmin.from('payment_schedules').select('*').order('due_date', { ascending: true }),
+      supabaseAdmin.from('payments').select('*').order('due_date', { ascending: true }),
       supabaseAdmin.from('coverages').select('*'),
       supabaseAdmin.from('certificates').select('*'),
       supabaseAdmin.from('contracts').select('*').order('created_at', { ascending: false })

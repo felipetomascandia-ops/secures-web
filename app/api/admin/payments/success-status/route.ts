@@ -23,56 +23,56 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: 'paymentId, scheduleId, or checkoutId is required' }, { status: 400 })
     }
 
-    // Handle scheduleId first if provided
+    // Handle scheduleId first if provided (now it's just a paymentId!)
     if (scheduleId) {
-      const { data: schedule, error: scheduleError } = await supabaseAdmin
-        .from('payment_schedules')
+      const { data: payment, error: paymentError } = await supabaseAdmin
+        .from('payments')
         .select('*')
         .eq('id', scheduleId)
         .single<Record<string, unknown>>()
 
-      if (scheduleError || !schedule) {
-        return NextResponse.json({ success: false, message: 'Schedule not found', error: scheduleError }, { status: 404 })
+      if (paymentError || !payment) {
+        return NextResponse.json({ success: false, message: 'Payment not found', error: paymentError }, { status: 404 })
       }
 
-      console.log('Found payment schedule in DB! Schedule status:', schedule.status)
+      console.log('Found payment in DB! Payment status:', payment.status)
 
-      if (schedule.status === 'pending') {
-        console.log('Schedule was pending! Marking as completed and activating...')
+      if (payment.status === 'pending') {
+        console.log('Payment was pending! Marking as completed and activating...')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabaseAdmin.from('payment_schedules') as any)
+        await (supabaseAdmin.from('payments') as any)
           .update({ status: 'completed', paid_at: new Date().toISOString() })
           .eq('id', scheduleId)
       }
 
-      // Always call completePaymentAndActivate for scheduleId (even if already completed)
-      const schedulePayment = {
-        id: schedule.id as string,
-        contract_id: schedule.contract_id as string | null,
+      // Always call completePaymentAndActivate (even if already completed)
+      const paymentToActivate = {
+        id: payment.id as string,
+        contract_id: payment.contract_id as string | null,
         status: 'completed',
       }
-      if (schedule.contract_id) {
-        await completePaymentAndActivate(schedulePayment)
+      if (payment.contract_id) {
+        await completePaymentAndActivate(paymentToActivate)
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'
       return NextResponse.json({
         success: true,
         payment: {
-          id: schedule.id as string,
-          square_checkout_id: schedule.checkout_id as string | null,
-          square_url: schedule.checkout_url as string | null,
-          amount: Number(schedule.amount) || 0,
+          id: payment.id as string,
+          square_checkout_id: payment.square_checkout_id as string | null,
+          square_url: payment.square_url as string | null,
+          amount: Number(payment.amount) || 0,
           currency: 'USD',
           status: 'completed',
           customer: 'Scheduled payment',
           email: '',
           phone: null,
           description: null,
-          contract_id: schedule.contract_id as string | null,
+          contract_id: payment.contract_id as string | null,
           created_by: null,
-          expires_at: schedule.due_date as string | null,
-          created_at: (schedule.created_at as string) || '',
+          expires_at: payment.due_date as string | null,
+          created_at: (payment.created_at as string) || '',
         },
         redirectToClient: true,
         clientRedirectUrl: `${baseUrl}/personal-insurance/payment-success?scheduleId=${scheduleId}`,
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
         console.log('Payment was pending! Marking as completed and activating...')
         // Mark payment as completed in our DB
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabaseAdmin as any).from('payments').update({ status: 'completed' }).eq('id', paymentId)
+        await (supabaseAdmin as any).from('payments').update({ status: 'completed', paid_at: new Date().toISOString() }).eq('id', paymentId)
         const updatedPayment = { ...payment, status: 'completed' }
         await completePaymentAndActivate(updatedPayment)
         
@@ -115,7 +115,7 @@ export async function GET(req: Request) {
         // If it's 'complete', update it to 'completed' for consistency
         if (payment.status === 'complete') {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabaseAdmin as any).from('payments').update({ status: 'completed' }).eq('id', paymentId)
+          await (supabaseAdmin as any).from('payments').update({ status: 'completed', paid_at: new Date().toISOString() }).eq('id', paymentId)
           const updatedPayment = { ...payment, status: 'completed' }
           await completePaymentAndActivate(updatedPayment)
         } else {
@@ -146,58 +146,30 @@ export async function GET(req: Request) {
       .single<Record<string, unknown>>()
 
     if (!paymentQuery.error && paymentQuery.data) {
-      return NextResponse.json({ success: true, payment: paymentQuery.data })
+      const payment = paymentQuery.data as Record<string, unknown>
+      
+      console.log('Found payment via checkoutId, status:', payment.status)
+      if (payment.status === 'pending') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from('payments') as any)
+          .update({ status: 'completed', paid_at: new Date().toISOString() })
+          .eq('id', payment.id)
+      }
+      
+      if (payment.contract_id) {
+        const paymentToActivate = {
+          id: payment.id as string,
+          contract_id: payment.contract_id as string,
+          status: 'completed',
+        }
+        await completePaymentAndActivate(paymentToActivate)
+      }
+
+      return NextResponse.json({ success: true, payment: payment })
     }
 
     if (paymentQuery.error) {
       console.warn('payments lookup error', { search, error: paymentQuery.error })
-    }
-
-    const scheduleQuery = await supabaseAdmin
-      .from('payment_schedules')
-      .select('*')
-      .or(`id.eq.${search},checkout_id.eq.${search}`)
-      .single<Record<string, unknown>>()
-
-    if (!scheduleQuery.error && scheduleQuery.data) {
-      const schedule = scheduleQuery.data as Record<string, unknown>
-      
-      console.log('Found schedule via checkoutId, status:', schedule.status)
-      if (schedule.status === 'pending') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabaseAdmin.from('payment_schedules') as any)
-          .update({ status: 'completed', paid_at: new Date().toISOString() })
-          .eq('id', schedule.id)
-      }
-      
-      if (schedule.contract_id) {
-        const schedulePayment = {
-          id: schedule.id as string,
-          contract_id: schedule.contract_id as string,
-          status: 'completed',
-        }
-        await completePaymentAndActivate(schedulePayment)
-      }
-
-      return NextResponse.json({
-        success: true,
-        payment: {
-          id: schedule.id as string,
-          square_checkout_id: schedule.checkout_id as string | null,
-          square_url: schedule.checkout_url as string | null,
-          amount: Number(schedule.amount) || 0,
-          currency: 'USD',
-          status: 'completed',
-          customer: 'Scheduled payment',
-          email: '',
-          phone: null,
-          description: null,
-          contract_id: schedule.contract_id as string | null,
-          created_by: null,
-          expires_at: schedule.due_date as string | null,
-          created_at: (schedule.created_at as string) || '',
-        },
-      })
     }
 
     const squarePaymentQuery = await supabaseAdmin

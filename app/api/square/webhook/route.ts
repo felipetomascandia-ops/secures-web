@@ -11,10 +11,10 @@ const db = supabaseAdmin as unknown as any
 const NOTIFICATION_URL = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.olimpocoveragegroup.com'}/api/square/webhook`
 
 /** Find the internal payment record that matches this Square event. */
-async function findPaymentBySquareId(squareLinkId: string): Promise<{ type: 'payment' | 'schedule' | 'square_payment', data: Record<string, unknown> } | null> {
+async function findPaymentBySquareId(squareLinkId: string): Promise<{ type: 'payment' | 'square_payment', data: Record<string, unknown> } | null> {
   console.log('findPaymentBySquareId: Searching for squareLinkId:', squareLinkId)
   
-  // First check payments table (for personal insurance payments)
+  // First check payments table for all payments!
   const { data: byId } = await db
     .from('payments')
     .select('*')
@@ -31,16 +31,7 @@ async function findPaymentBySquareId(squareLinkId: string): Promise<{ type: 'pay
   console.log('findPaymentBySquareId: Checked payments table byUrl:', byUrl)
   if (byUrl) return { type: 'payment', data: byUrl }
 
-  // Check payment_schedules table (for admin-created contracts down payments/monthly)
-  const { data: schedule } = await db
-    .from('payment_schedules')
-    .select('*')
-    .eq('checkout_id', squareLinkId)
-    .maybeSingle()
-  console.log('findPaymentBySquareId: Checked payment_schedules table:', schedule)
-  if (schedule) return { type: 'schedule', data: schedule }
-
-  // Check square_payments table, then get the associated payment_schedule separately
+  // Check square_payments table, then get the associated payment
   const { data: squarePayment } = await db
     .from('square_payments')
     .select('*')
@@ -49,17 +40,17 @@ async function findPaymentBySquareId(squareLinkId: string): Promise<{ type: 'pay
   console.log('findPaymentBySquareId: Checked square_payments table:', squarePayment)
   
   if (squarePayment) {
-    // Now get the payment schedule from square_payments.schedule_id
-    const { data: associatedSchedule } = await db
-      .from('payment_schedules')
+    // Now get the payment from square_payments.payment_id
+    const { data: associatedPayment } = await db
+      .from('payments')
       .select('*')
-      .eq('id', squarePayment.schedule_id)
+      .eq('id', squarePayment.payment_id)
       .maybeSingle()
-    console.log('findPaymentBySquareId: Found associated payment_schedule:', associatedSchedule)
+    console.log('findPaymentBySquareId: Found associated payment:', associatedPayment)
     
-    // Attach the schedule to the squarePayment object for convenience
-    const squarePaymentWithSchedule = { ...squarePayment, payment_schedules: associatedSchedule }
-    return { type: 'square_payment', data: squarePaymentWithSchedule }
+    // Attach the payment to the squarePayment object
+    const squarePaymentWithPayment = { ...squarePayment, payments: associatedPayment }
+    return { type: 'square_payment', data: squarePaymentWithPayment }
   }
 
   return null
@@ -198,12 +189,13 @@ export async function POST(req: Request) {
     if (paymentResult.type === 'payment') {
       // Handle regular payments table
       const paymentRecord = paymentResult.data
-      // Update payment status to 'completed' (for consistency) even if it was 'complete'
+      // Update payment status to 'completed' and add paid_at!
       const { error: updateError } = await db
         .from('payments')
         .update({
           status: newStatus,
           square_checkout_id: squareLinkId, // ensure it's stored for future lookups
+          paid_at: new Date().toISOString(),
         })
         .eq('id', paymentRecord.id)
 
@@ -221,43 +213,12 @@ export async function POST(req: Request) {
       if (newStatus === 'completed' || paymentRecord.status === 'complete') {
         paymentToActivate = newStatus === 'completed' ? { ...paymentRecord, status: newStatus } : paymentRecord
       }
-    } else if (paymentResult.type === 'schedule') {
-      // Handle payment_schedules
-      const schedule = paymentResult.data
-      // Update schedule status
-      const { error: updateError } = await db
-        .from('payment_schedules')
-        .update({
-          status: newStatus === 'completed' ? 'completed' : schedule.status,
-          paid_at: new Date().toISOString(),
-        })
-        .eq('id', schedule.id)
-
-      if (updateError) {
-        console.error('Webhook: DB update error (payment_schedules table)', updateError)
-      } else {
-        console.info('Webhook: payment schedule status updated', {
-          scheduleId: schedule.id,
-          newStatus,
-          squareLinkId,
-        })
-      }
-
-      // Activate if it's the down payment (sequence 0) and status is completed
-      if ((newStatus === 'completed') && (schedule.sequence === 0) && schedule.contract_id) {
-        // Create a fake payment object for completePaymentAndActivate
-        paymentToActivate = {
-          id: schedule.id as string,
-          contract_id: schedule.contract_id as string,
-          status: newStatus,
-        }
-      }
     } else if (paymentResult.type === 'square_payment') {
-      // Handle square_payments
+      // Handle square_payments linked to payments table
       const squarePayment = paymentResult.data
-      const schedule = squarePayment.payment_schedules as Record<string, unknown> | null
+      const payment = squarePayment.payments as Record<string, unknown> | null
       
-      console.log('Webhook: Processing square_payment:', { squarePayment, schedule })
+      console.log('Webhook: Processing square_payment:', { squarePayment, payment })
       
       // Update square_payments status
       const { error: updateError } = await db
@@ -274,27 +235,27 @@ export async function POST(req: Request) {
         console.info('Webhook: square_payments status updated')
       }
 
-      // Update associated payment_schedule if we have one
-      if (schedule) {
-        const { error: scheduleUpdateError } = await db
-          .from('payment_schedules')
+      // Update associated payment if we have one
+      if (payment) {
+        const { error: paymentUpdateError } = await db
+          .from('payments')
           .update({
-            status: newStatus === 'completed' ? 'completed' : schedule.status,
+            status: newStatus,
             paid_at: new Date().toISOString(),
           })
-          .eq('id', schedule.id)
+          .eq('id', payment.id)
         
-        if (scheduleUpdateError) {
-          console.error('Webhook: DB update error (payment_schedules from square_payment)', scheduleUpdateError)
+        if (paymentUpdateError) {
+          console.error('Webhook: DB update error (payments from square_payment)', paymentUpdateError)
         } else {
-          console.info('Webhook: payment_schedule status updated (from square_payment)', { scheduleId: schedule.id })
+          console.info('Webhook: payment status updated (from square_payment)', { paymentId: payment.id })
         }
 
         // Activate if it's the down payment (sequence 0) and status is completed
-        if ((newStatus === 'completed') && (schedule.sequence === 0) && schedule.contract_id) {
+        if ((newStatus === 'completed') && (payment.sequence === 0) && payment.contract_id) {
           paymentToActivate = {
-            id: squarePayment.id as string,
-            contract_id: schedule.contract_id as string,
+            id: payment.id as string,
+            contract_id: payment.contract_id as string,
             status: newStatus,
           }
         }
@@ -307,8 +268,6 @@ export async function POST(req: Request) {
 
     let paymentId: string | null = null
     if (paymentResult.type === 'payment') {
-      paymentId = paymentResult.data.id as string
-    } else if (paymentResult.type === 'schedule') {
       paymentId = paymentResult.data.id as string
     } else if (paymentResult.type === 'square_payment') {
       paymentId = paymentResult.data.id as string

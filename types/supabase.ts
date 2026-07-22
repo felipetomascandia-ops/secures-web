@@ -144,6 +144,9 @@ export interface Database {
           created_by: string | null
           expires_at: string | null
           created_at: string
+          label: string | null
+          due_date: string | null
+          sequence: number | null
         }
         Insert: {
           id?: string
@@ -160,6 +163,9 @@ export interface Database {
           created_by?: string | null
           expires_at?: string | null
           created_at?: string
+          label?: string | null
+          due_date?: string | null
+          sequence?: number | null
         }
         Update: {
           id?: string
@@ -176,6 +182,9 @@ export interface Database {
           created_by?: string | null
           expires_at?: string | null
           created_at?: string
+          label?: string | null
+          due_date?: string | null
+          sequence?: number | null
         }
       }
       contracts: {

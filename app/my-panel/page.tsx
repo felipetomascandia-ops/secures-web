@@ -29,7 +29,7 @@ type ScheduleRow = {
   amount?: number | null
   due_date?: string | null
   status?: string | null
-  checkout_url?: string | null
+  square_url?: string | null
 }
 
 type CoverageRow = {
@@ -451,9 +451,9 @@ export default function MyPanelPage() {
                       </div>
                       <div className="flex items-center gap-3 text-right">
                         <p className="text-sm font-semibold text-slate-200">${Number(schedule.amount || 0).toFixed(2)}</p>
-                        {schedule.checkout_url && schedule.status === 'pending' ? (
-                          <a href={schedule.checkout_url} target="_blank" rel="noreferrer" className="rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500">Pay now</a>
-                        ) : (
+                        {schedule.square_url && schedule.status === 'pending' ? (
+          <a href={schedule.square_url} target="_blank" rel="noreferrer" className="rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500">Pay now</a>
+        ) : (
                           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{schedule.status}</p>
                         )}
                       </div>
