@@ -399,7 +399,9 @@ export class ContractsService {
 
     const createdSchedules: any[] = []
     if (downPayment && Number(downPayment) > 0) {
-      const down = await PaymentsService.createScheduleItem(contractId, 0, 'Down Payment', Number(downPayment), firstDueDate)
+      // Default down payment due date to today if firstDueDate is not provided
+      const downDueDate = firstDueDate || new Date().toISOString().slice(0, 10)
+      const down = await PaymentsService.createScheduleItem(contractId, 0, 'Down Payment', Number(downPayment), downDueDate)
       createdSchedules.push(down)
 
       const downRec = down as Record<string, unknown>
@@ -421,7 +423,7 @@ export class ContractsService {
     }
 
     // Refresh schedules to get checkout URLs
-    const { data: schedulesWithCheckouts } = await (db as unknown as any).from('payment_schedules').select('*').eq('contract_id', contractId).order('sequence', { ascending: true })
+    const { data: schedulesWithCheckouts } = await (db as unknown as any).from('payments').select('*').eq('contract_id', contractId).order('sequence', { ascending: true })
 
     if (sendToClient && clientEmail) {
       const formatCurrency = (value: number) => `$${value.toFixed(2)}`
