@@ -135,8 +135,8 @@ function PaymentSuccessContent() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-sky-600 border-t-transparent mb-4"></div>
-          <p className="text-slate-300 text-lg">Verificando tu pago...</p>
-          <p className="text-slate-500 text-sm mt-2">Por favor no cierres esta ventana</p>
+          <p className="text-slate-300 text-lg">Verifying your payment...</p>
+          <p className="text-slate-500 text-sm mt-2">Please do not close this window</p>
         </div>
       </div>
     )
@@ -148,22 +148,22 @@ function PaymentSuccessContent() {
         <div className="max-w-2xl w-full">
           <div className="rounded-3xl border border-emerald-700 bg-slate-900/70 p-8 text-center">
             <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-3xl font-bold text-white mb-4">¡Pago Exitoso!</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">Payment Successful!</h1>
             <p className="text-slate-300 mb-6">
-              Tu pago ha sido procesado correctamente. Tu cobertura de seguro está ahora activa.
+              Your payment has been processed successfully. Your insurance coverage is now active.
             </p>
             
             {/* Contract Document */}
             {contractId && (
               <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
-                <h3 className="text-lg font-semibold text-white mb-4">📄 Contrato</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">📄 Contract</h3>
                 <a
                   href={`/api/contracts/${contractId}/document`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
                 >
-                  📋 Ver / Descargar Contrato {contractNumber ? `#${contractNumber}` : ''}
+                  📋 View / Download Contract {contractNumber ? `#${contractNumber}` : ''}
                 </a>
               </div>
             )}
@@ -171,24 +171,24 @@ function PaymentSuccessContent() {
             {/* Certificates */}
             {certificates.length > 0 && (
               <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
-                <h3 className="text-lg font-semibold text-white mb-4">🎖️ Tus Certificados de Seguro</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">🎖️ Your Insurance Certificates</h3>
                 <div className="space-y-3">
                   {certificates.map((cert) => {
                     const coverage = coverages.find(c => c.id === cert.coverage_id)
                     const insuranceLabel = coverage?.insurance_type || cert.certificate_type
                     const typeLabels: Record<string, string> = {
-                      'personal-auto': 'Auto Personal',
-                      'motorcycle': 'Motocicleta',
-                      'pet': 'Mascotas',
-                      'mobile-device': 'Dispositivo Móvil',
-                      'event': 'Eventos',
-                      'bicycle': 'Bicicleta',
-                      'general-liability': 'Responsabilidad General',
-                      'commercial-auto': 'Auto Comercial',
-                      'commercial-property': 'Propiedad Comercial',
-                      'workers-comp': 'Compensación Laboral',
+                      'personal-auto': 'Personal Auto',
+                      'motorcycle': 'Motorcycle',
+                      'pet': 'Pet',
+                      'mobile-device': 'Mobile Device',
+                      'event': 'Event',
+                      'bicycle': 'Bicycle',
+                      'general-liability': 'General Liability',
+                      'commercial-auto': 'Commercial Auto',
+                      'commercial-property': 'Commercial Property',
+                      'workers-comp': "Workers' Compensation",
                     }
-                    const displayName = typeLabels[insuranceLabel] || insuranceLabel || 'Seguro'
+                    const displayName = typeLabels[insuranceLabel] || insuranceLabel || 'Insurance'
                     
                     return (
                       <div key={cert.id} className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800/50 p-4">
@@ -197,7 +197,7 @@ function PaymentSuccessContent() {
                           <div className="text-left">
                             <p className="text-sm font-medium text-white">{displayName}</p>
                             {coverage?.policy_number && (
-                              <p className="text-xs text-slate-400">Póliza: {coverage.policy_number}</p>
+                              <p className="text-xs text-slate-400">Policy: {coverage.policy_number}</p>
                             )}
                           </div>
                         </div>
@@ -207,7 +207,7 @@ function PaymentSuccessContent() {
                           rel="noreferrer"
                           className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500"
                         >
-                          📥 Descargar
+                          📥 Download
                         </a>
                       </div>
                     )
@@ -219,12 +219,12 @@ function PaymentSuccessContent() {
             {/* All Payments */}
             {payments.length > 0 && (
               <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
-                <h3 className="text-lg font-semibold text-white mb-4">💳 Historial de Pagos</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">💳 Payment History</h3>
                 <div className="space-y-2">
                   {payments.map((pmt, idx) => (
                     <div key={idx} className="flex justify-between items-center rounded-lg border border-slate-700 bg-slate-800/50 p-3">
                       <div>
-                        <p className="text-sm font-medium text-white">{pmt.description || 'Pago'}</p>
+                        <p className="text-sm font-medium text-white">{pmt.description || 'Payment'}</p>
                         <p className="text-xs text-slate-400">{new Date(pmt.created_at).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">
@@ -238,23 +238,23 @@ function PaymentSuccessContent() {
             )}
 
             <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-6 mb-6 text-left">
-              <h3 className="text-lg font-semibold text-white mb-4">Próximos Pasos:</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Next Steps:</h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Recibirás un correo electrónico con tu contrato firmado y certificados de seguro.</span>
+                  <span>You will receive an email with your signed contract and insurance certificates.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Tu póliza de seguro está activa y comienza hoy.</span>
+                  <span>Your insurance policy is active and starts today.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Puedes acceder a todos tus documentos y pagos en &ldquo;Mi Panel&rdquo;.</span>
+                  <span>You can access all your documents and payments in &quot;My Panel&quot;.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-emerald-400 mr-2">✓</span>
-                  <span>Tu primer pago mensual será cobrado en 30 días.</span>
+                  <span>Your first monthly payment will be charged in 30 days.</span>
                 </li>
               </ul>
             </div>
@@ -264,13 +264,13 @@ function PaymentSuccessContent() {
                 href="/my-panel"
                 className="rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white hover:bg-sky-500 text-center"
               >
-                Ir a Mi Panel
+                Go to My Panel
               </Link>
               <Link
                 href="/"
                 className="rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-300 hover:bg-slate-800 text-center"
               >
-                Volver al Inicio
+                Back to Home
               </Link>
             </div>
           </div>
@@ -285,9 +285,9 @@ function PaymentSuccessContent() {
         <div className="max-w-2xl w-full">
           <div className="rounded-3xl border border-red-700 bg-slate-900/70 p-8 text-center">
             <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-3xl font-bold text-white mb-4">Pago No Completado</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">Payment Not Completed</h1>
             <p className="text-slate-300 mb-6">
-              Hubo un problema con tu pago. Por favor intenta de nuevo o contacta a nuestro equipo de soporte.
+              There was a problem with your payment. Please try again or contact our support team.
             </p>
             
             <div className="flex flex-col gap-3">
@@ -295,13 +295,13 @@ function PaymentSuccessContent() {
                 href="/my-panel"
                 className="rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white hover:bg-sky-500 text-center"
               >
-                Intentar de Nuevo
+                Try Again
               </Link>
               <Link
                 href="/"
                 className="rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-300 hover:bg-slate-800 text-center"
               >
-                Volver al Inicio
+                Back to Home
               </Link>
             </div>
           </div>
@@ -316,9 +316,9 @@ function PaymentSuccessContent() {
       <div className="max-w-2xl w-full">
         <div className="rounded-3xl border border-amber-700 bg-slate-900/70 p-8 text-center">
           <div className="text-6xl mb-4">⏳</div>
-          <h1 className="text-3xl font-bold text-white mb-4">Verificando Pago</h1>
+          <h1 className="text-3xl font-bold text-white mb-4">Verifying Payment</h1>
           <p className="text-slate-300 mb-6">
-            Tu pago está siendo procesado. Esto puede tomar unos minutos. Por favor revisa tu correo electrónico para confirmación.
+            Your payment is being processed. This may take a few minutes. Please check your email for confirmation.
           </p>
           
           <div className="flex flex-col gap-3">
@@ -326,13 +326,13 @@ function PaymentSuccessContent() {
               href="/my-panel"
               className="rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white hover:bg-sky-500 text-center"
             >
-              Ir a Mi Panel
+              Go to My Panel
             </Link>
             <Link
               href="/"
               className="rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-300 hover:bg-slate-800 text-center"
             >
-              Volver al Inicio
+              Back to Home
             </Link>
           </div>
         </div>
@@ -347,7 +347,7 @@ export default function PaymentSuccessPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-sky-600 border-t-transparent mb-4"></div>
-          <p className="text-slate-300 text-lg">Cargando...</p>
+          <p className="text-slate-300 text-lg">Loading...</p>
         </div>
       </div>
     }>
