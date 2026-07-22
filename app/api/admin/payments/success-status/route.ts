@@ -39,8 +39,8 @@ export async function GET(req: Request) {
 
       if (schedule.status === 'pending') {
         console.log('Schedule was pending! Marking as completed and activating...')
-        await (supabaseAdmin as any)
-          .from('payment_schedules')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from('payment_schedules') as any)
           .update({ status: 'completed', paid_at: new Date().toISOString() })
           .eq('id', scheduleId)
       }
@@ -164,8 +164,8 @@ export async function GET(req: Request) {
       
       console.log('Found schedule via checkoutId, status:', schedule.status)
       if (schedule.status === 'pending') {
-        await (supabaseAdmin as any)
-          .from('payment_schedules')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabaseAdmin.from('payment_schedules') as any)
           .update({ status: 'completed', paid_at: new Date().toISOString() })
           .eq('id', schedule.id)
       }
