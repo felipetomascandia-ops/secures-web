@@ -229,7 +229,7 @@ export class ContractsService {
     return await checkPolicyNumberForClient(policyNumber, clientEmail)
   }
 
-  static async createContractWithSchedule(contractData: any, createdBy?: string) {
+  static async createContractWithSchedule(contractData: any, createdBy?: string, skipDownPaymentCheckout?: boolean) {
     console.log('ContractsService: Creating contract with data', contractData)
     console.log('ContractsService: Coverages received', { coverages: contractData.coverages, coveragesCount: contractData.coverages?.length })
     const { contractNumber, policyNumber, clientName, clientCompanyName, clientEmail, clientPhone, totalPremium, downPayment, monthlyPayment, numberOfPayments, firstDueDate, terms, sendToClient, coverages = [], vehicles = [] } = contractData
@@ -404,11 +404,15 @@ export class ContractsService {
       const down = await PaymentsService.createScheduleItem(contractId, 0, 'Down Payment', Number(downPayment), downDueDate)
       createdSchedules.push(down)
 
-      const downRec = down as Record<string, unknown>
-      // Pass redirectUrl to ensure customer goes to success page, not admin
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
-      const redirectUrl = `${baseUrl}/personal-insurance/payment-success`
-      await PaymentsService.createDownPaymentCheckout(downRec['id'] as string, Number(downPayment), 'USD', `Down Payment for ${contractNumber}`, clientEmail, clientPhone, redirectUrl)
+      // Only create the down payment checkout if this is NOT a personal insurance contract
+      // (personal insurance creates its own checkout link via /api/personal-insurance/create-payment)
+      if (!skipDownPaymentCheckout) {
+        const downRec = down as Record<string, unknown>
+        // Pass redirectUrl to ensure customer goes to success page, not admin
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://olimpocoveragegroup.com'
+        const redirectUrl = `${baseUrl}/personal-insurance/payment-success`
+        await PaymentsService.createDownPaymentCheckout(downRec['id'] as string, Number(downPayment), 'USD', `Down Payment for ${contractNumber}`, clientEmail, clientPhone, redirectUrl)
+      }
     }
 
     const startDate = new Date(firstDueDate || new Date())

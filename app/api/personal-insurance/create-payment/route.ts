@@ -26,28 +26,64 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Contract not found' }, { status: 404 })
     }
 
-    // Create payment record
-    const paymentRecord = {
-      contract_id: contractId,
-      amount: Number(amount),
-      currency: 'USD',
-      status: 'pending',
-      customer: customerName,
-      email: customerEmail,
-      phone: customerPhone || '',
-      description: `Initial payment for ${planId} plan - Contract ${contract.contract_number}`,
-      created_by: null,
-    }
-
-    const { data: payment, error: paymentError } = await db
+    // Find the EXISTING Down Payment (sequence=0) for this contract instead of creating a new one
+    const { data: existingPayment, error: findPaymentError } = await db
       .from('payments')
-      .insert(paymentRecord)
-      .select()
+      .select('*')
+      .eq('contract_id', contractId)
+      .eq('sequence', 0)
       .single()
 
-    if (paymentError) {
-      console.error('Payment record error:', paymentError)
-      return NextResponse.json({ success: false, message: 'Failed to create payment record' }, { status: 500 })
+    let payment
+    if (!findPaymentError && existingPayment) {
+      // Update the existing Down Payment with customer info and amount
+      const { data: updatedPayment, error: updatePaymentError } = await db
+        .from('payments')
+        .update({
+          amount: Number(amount),
+          customer: customerName,
+          email: customerEmail,
+          phone: customerPhone || '',
+          description: `Down Payment - ${planId} plan - Contract ${contract.contract_number}`,
+          status: 'pending',
+        })
+        .eq('id', existingPayment.id)
+        .select()
+        .single()
+
+      if (updatePaymentError) {
+        console.error('Update payment record error:', updatePaymentError)
+        return NextResponse.json({ success: false, message: 'Failed to update payment record' }, { status: 500 })
+      }
+      payment = updatedPayment
+    } else {
+      // Fallback: if no down payment exists, create one (safety net)
+      const paymentRecord = {
+        contract_id: contractId,
+        amount: Number(amount),
+        currency: 'USD',
+        status: 'pending',
+        customer: customerName,
+        email: customerEmail,
+        phone: customerPhone || '',
+        description: `Down Payment - ${planId} plan - Contract ${contract.contract_number}`,
+        created_by: null,
+        sequence: 0,
+        label: 'Down Payment',
+        due_date: new Date().toISOString().slice(0, 10),
+      }
+
+      const { data: newPayment, error: paymentError } = await db
+        .from('payments')
+        .insert(paymentRecord)
+        .select()
+        .single()
+
+      if (paymentError) {
+        console.error('Payment record error:', paymentError)
+        return NextResponse.json({ success: false, message: 'Failed to create payment record' }, { status: 500 })
+      }
+      payment = newPayment
     }
 
     // Create Square checkout link

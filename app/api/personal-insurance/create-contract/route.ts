@@ -80,7 +80,8 @@ export async function POST(req: Request) {
       
       const result = await ContractsService.createContractWithSchedule(
         contractData, 
-        userId
+        userId,
+        true // skip creating the Down Payment checkout link (we'll create it in create-payment)
       )
       
       console.log('Contract created successfully:', result)
