@@ -72,9 +72,7 @@ const productCategories: ProductCategory[] = [
   }
 ];
 
-const allProducts = productCategories.flatMap(cat => cat.items)
-
-type CoverageItem = typeof allProducts[0]
+type CoverageItem = (typeof productCategories)[number]['items'][number]
 
 const whoWeCover = ["Construction", "Contractors", "Consultants", "Cleaning Services", "Retail", "Food & Beverage", "Sports & Fitness", "Education", "Arts & Entertainment", "Beauty & Personal Care", "Real Estate", "Transportation", "Technology", "Healthcare", "Non-Profit"];
 
@@ -85,7 +83,7 @@ const incomeRanges = ["Less than $50,000", "$50,000 - $100,000", "$100,000 - $25
 type Language = 'en' | 'es'
 
 const translations: Record<Language, {
-  nav: { products: string; personal: string; property: string; business: string; support: string; about: string; contact: string; getQuote: string; signIn: string }
+  nav: { products: string; personal: string; property: string; business: string; support: string; about: string; contact: string; getQuote: string; signIn: string; personalInsurance: string; menu: string }
   hero: { badge: string; title1: string; titleAccent: string; title2: string; subtitle: string; cta1: string; cta2: string }
   stats: { years: string; clients: string; policies: string; support: string }
   services: { label: string; title: string; subtitle: string }
@@ -96,7 +94,7 @@ const translations: Record<Language, {
   coverageModal: { title: string }
 }> = {
   en: {
-    nav: { products: 'Products', personal: 'Personal', property: 'Property', business: 'Business', support: 'Support', about: 'About Us', contact: 'Contact', getQuote: 'Get a Quote', signIn: 'Sign In' },
+    nav: { products: 'Products', personal: 'Personal', property: 'Property', business: 'Business', support: 'Support', about: 'About Us', contact: 'Contact', getQuote: 'Get a Quote', signIn: 'Sign In', personalInsurance: 'Personal Insurance', menu: 'Menu' },
     hero: { badge: 'Trusted by 500+ Businesses', title1: 'Protect What Matters', titleAccent: 'Most', title2: 'With Olimpo', subtitle: 'Comprehensive insurance solutions for auto, home, business, and more. Your trusted partner on Horsham PA, USA.', cta1: 'Request Quote', cta2: 'Explore Services' },
     stats: { years: 'Years Experience', clients: 'Happy Clients', policies: 'Policies Issued', support: 'Support Available' },
     services: { label: 'Our Services', title: 'Insurance Solutions for Every Need', subtitle: 'Complete coverage options to protect every aspect of your life and business' },
@@ -107,7 +105,7 @@ const translations: Record<Language, {
     coverageModal: { title: 'What this coverage helps protect you from' }
   },
   es: {
-    nav: { products: 'Productos', personal: 'Personal', property: 'Propiedad', business: 'Negocios', support: 'Soporte', about: 'Sobre Nosotros', contact: 'Contacto', getQuote: 'Solicitar Cotización', signIn: 'Iniciar Sesión' },
+    nav: { products: 'Productos', personal: 'Personal', property: 'Propiedad', business: 'Negocios', support: 'Soporte', about: 'Sobre Nosotros', contact: 'Contacto', getQuote: 'Solicitar Cotización', signIn: 'Iniciar Sesión', personalInsurance: 'Seguro Personal', menu: 'Menú' },
     hero: { badge: 'Confiado por 500+ Empresas', title1: 'Protege lo que más', titleAccent: 'Importa', title2: 'Con Olimpo', subtitle: 'Soluciones integrales de seguros para auto, hogar, negocios y más. Tu socio de confianza en Horsham PA, EE.UU.', cta1: 'Solicitar Cotización', cta2: 'Explorar Servicios' },
     stats: { years: 'Años de Experiencia', clients: 'Clientes Satisfechos', policies: 'Pólizas Emitidas', support: 'Soporte Disponible' },
     services: { label: 'Nuestros Servicios', title: 'Soluciones de Seguros para Cada Necesidad', subtitle: 'Opciones de cobertura completa para proteger cada aspecto de tu vida y negocio' },
@@ -120,10 +118,11 @@ const translations: Record<Language, {
 }
 
 export default function Home() {
-  const { user } = useSupabase()
+  useSupabase()
   const [lang, setLang] = useState<Language>('en')
   const [activeSection, setActiveSection] = useState("home")
   const [showProducts, setShowProducts] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const productsRef = useRef<HTMLDivElement>(null)
   const t = translations[lang]
 
@@ -276,13 +275,30 @@ export default function Home() {
               <Link href="#about" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'about' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.about}</Link>
               <Link href="#services" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'services' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.support}</Link>
               <Link href="/personal-insurance" className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700">
-                Seguro Personal
+                {t.nav.personalInsurance}
               </Link>
               <Link href="#contact" className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeSection === 'contact' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50'}`}>{t.nav.contact}</Link>
             </div>
 
             {/* Right Side */}
             <div className="flex items-center gap-3">
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                aria-label={t.nav.menu}
+                aria-expanded={mobileMenuOpen}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+
               {/* Language Switcher */}
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                 <button
@@ -311,6 +327,99 @@ export default function Home() {
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden pt-20">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute left-4 right-4 top-24 bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div className="p-4 space-y-1">
+              <button
+                onClick={() => { setShowProducts(!showProducts); }}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <span>🛡️</span>
+                  {t.nav.products}
+                </span>
+                <svg className={`w-4 h-4 transition-transform ${showProducts ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showProducts && (
+                <div className="ml-4 mb-2 space-y-1 border-l-2 border-blue-100 pl-3">
+                  {productCategories.map((category) => (
+                    <div key={category.name} className="py-2">
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-2 px-2">
+                        {category.name === 'PERSONAL' ? t.nav.personal : category.name === 'PROPERTY' ? t.nav.property : t.nav.business}
+                      </h3>
+                      <div className="space-y-0.5">
+                        {category.items.map((item) => (
+                          <button
+                            key={item.key}
+                            onClick={() => { setMobileMenuOpen(false); openCoverageModal(item); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                          >
+                            <span>{item.icon}</span>
+                            <span>{item.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Link
+                href="#about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+              >
+                <span>ℹ️</span>
+                {t.nav.about}
+              </Link>
+
+              <Link
+                href="#services"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+              >
+                <span>💬</span>
+                {t.nav.support}
+              </Link>
+
+              <Link
+                href="/personal-insurance"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-md shadow-blue-600/20"
+              >
+                <span>🚗</span>
+                {t.nav.personalInsurance}
+              </Link>
+
+              <Link
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+              >
+                <span>✉️</span>
+                {t.nav.contact}
+              </Link>
+
+              <div className="pt-3 mt-3 border-t border-gray-100">
+                <Link
+                  href="#contact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20"
+                >
+                  {t.nav.getQuote}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section id="home" className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">

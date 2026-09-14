@@ -449,15 +449,29 @@ const translations: Record<Language, {
   saveSignature: string
   signatureSaved: string
   backToHome: string
+  vehicleSection: string
+  vehicleYear: string
+  vehicleMake: string
+  vehicleModel: string
+  vehicleVin: string
+  vehicleLicensePlate: string
+  vehicleDrivers: string
+  vehicleDrivers1: string
+  vehicleDrivers2: string
+  vehicleDrivers3: string
+  vehicleRequired: string
+  perMonth: string
+  continue: string
+  back: string
 }> = {
   en: {
     pageTitle: 'Personal Insurance',
     pageSubtitle: 'Protect what matters most with our customized plans',
-    step1: '1. Your Data',
-    step2: '2. Insurance Type',
-    step3: '3. Select Plan',
-    step4: '4. Sign Contract',
-    step5: '5. Payment',
+    step1: 'Your Data',
+    step2: 'Insurance',
+    step3: 'Plan',
+    step4: 'Contract',
+    step5: 'Payment',
     personalInfo: 'Personal Information',
     insuranceType: 'Select Insurance Type',
     selectPlan: 'Choose Your Plan',
@@ -501,15 +515,29 @@ const translations: Record<Language, {
     saveSignature: 'Save and Sign',
     signatureSaved: '✓ Signature saved successfully!',
     backToHome: 'Back to Home',
+    vehicleSection: 'Vehicle Information',
+    vehicleYear: 'Year',
+    vehicleMake: 'Make / Brand',
+    vehicleModel: 'Model',
+    vehicleVin: 'VIN (Vehicle Identification Number)',
+    vehicleLicensePlate: 'License Plate / Patente',
+    vehicleDrivers: 'Number of Drivers',
+    vehicleDrivers1: '1 Driver (Only you)',
+    vehicleDrivers2: '2 Drivers',
+    vehicleDrivers3: '3 or more Drivers',
+    vehicleRequired: 'Please fill all required vehicle information.',
+    perMonth: '/mo',
+    continue: 'Continue',
+    back: 'Back',
   },
   es: {
     pageTitle: 'Seguro Personal',
     pageSubtitle: 'Protege lo que más importa con nuestros planes personalizados',
-    step1: '1. Tus Datos',
-    step2: '2. Tipo de Seguro',
-    step3: '3. Seleccionar Plan',
-    step4: '4. Firmar Contrato',
-    step5: '5. Pago',
+    step1: 'Tus Datos',
+    step2: 'Seguro',
+    step3: 'Plan',
+    step4: 'Contrato',
+    step5: 'Pago',
     personalInfo: 'Información Personal',
     insuranceType: 'Selecciona el Tipo de Seguro',
     selectPlan: 'Elige tu Plan',
@@ -553,6 +581,20 @@ const translations: Record<Language, {
     saveSignature: 'Guardar y Firmar',
     signatureSaved: '✓ ¡Firma guardada exitosamente!',
     backToHome: 'Volver al Inicio',
+    vehicleSection: 'Información del Vehículo',
+    vehicleYear: 'Año',
+    vehicleMake: 'Marca',
+    vehicleModel: 'Modelo',
+    vehicleVin: 'VIN (Número de Identificación Vehicular)',
+    vehicleLicensePlate: 'Patente / Placa',
+    vehicleDrivers: 'Número de Conductores',
+    vehicleDrivers1: '1 Conductor (Solo tú)',
+    vehicleDrivers2: '2 Conductores',
+    vehicleDrivers3: '3 o más Conductores',
+    vehicleRequired: 'Por favor completa todos los datos obligatorios del vehículo.',
+    perMonth: '/mes',
+    continue: 'Continuar',
+    back: 'Atrás',
   }
 }
 
@@ -582,6 +624,12 @@ export default function PersonalInsurancePage() {
     zip: '',
     dateOfBirth: '',
     ssn: '',
+    vehicleYear: '',
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleVin: '',
+    vehicleLicensePlate: '',
+    vehicleDriversCount: '1',
   })
 
   useEffect(() => {
@@ -621,18 +669,45 @@ export default function PersonalInsurancePage() {
 
     setLoading(true)
     try {
-      // Validate required form fields (SSN optional)
-      const requiredFields = ['firstName','lastName','email','phone','address','city','state','zip','dateOfBirth']
-      const missing = requiredFields.filter(f => !formData[f as keyof typeof formData] || String(formData[f as keyof typeof formData]).trim() === '')
+      const requiredFields: (keyof typeof formData)[] = ['firstName','lastName','email','phone','address','city','state','zip','dateOfBirth']
+      const missing = requiredFields.filter(f => !formData[f] || String(formData[f]).trim() === '')
       if (missing.length > 0) {
         alert(t.fillRequired)
         setLoading(false)
         return
       }
-      const plan = selectedPlan
-      const insuranceType = personalInsuranceTypes.find(i => i.key === selectedInsurance)!
 
-      // Preparar una única cobertura para el seguro personal
+      if (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle') {
+        const vehicleRequired: (keyof typeof formData)[] = ['vehicleYear', 'vehicleMake', 'vehicleModel', 'vehicleVin', 'vehicleLicensePlate', 'vehicleDriversCount']
+        const vehicleMissing = vehicleRequired.filter(f => !formData[f] || String(formData[f]).trim() === '')
+        if (vehicleMissing.length > 0) {
+          alert(t.vehicleRequired)
+          setLoading(false)
+          return
+        }
+      }
+
+      const plan = selectedPlan
+
+      const vehicleDetails = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle')
+        ? ` | Vehicle: ${formData.vehicleYear} ${formData.vehicleMake} ${formData.vehicleModel} | VIN: ${formData.vehicleVin} | License Plate: ${formData.vehicleLicensePlate} | Drivers: ${formData.vehicleDriversCount}`
+        : ''
+
+      const vehicleMetadata = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle')
+        ? {
+            year: Number(formData.vehicleYear),
+            make: formData.vehicleMake,
+            model: formData.vehicleModel,
+            vin: formData.vehicleVin,
+            licensePlate: formData.vehicleLicensePlate,
+            driversCount: Number(formData.vehicleDriversCount),
+          }
+        : undefined
+
+      const vehiclesArray = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle' && vehicleMetadata)
+        ? [{ ...vehicleMetadata, license_plate: formData.vehicleLicensePlate, drivers_count: Number(formData.vehicleDriversCount) }]
+        : []
+
       const selectedCoverages = [{
         insuranceType: selectedInsurance,
         policyNumber: `PA-P-${Date.now()}`,
@@ -641,7 +716,9 @@ export default function PersonalInsurancePage() {
         deductible: plan.deductible.toString(),
         coverageLimit: getCoverageLimit(selectedInsurance, plan),
         insuredName: `${formData.firstName} ${formData.lastName}`,
-        coverageDetails: plan.coverages.map((c: { en: string }) => c.en).join(', ') // Unir todas las descripciones en una sola
+        coverageDetails: plan.coverages.map((c: { en: string }) => c.en).join(', ') + vehicleDetails,
+        vehicle: vehicleMetadata,
+        licensePlate: formData.vehicleLicensePlate,
       }]
 
       console.log('Creating contract with coverages:', selectedCoverages)
@@ -683,6 +760,7 @@ export default function PersonalInsurancePage() {
             status: 'pending',
             policyStatus: 'active',
             coverages: selectedCoverages,
+            vehicles: vehiclesArray,
             sendToClient: true,  // Send email with contract and certificates
           },
           lang,
@@ -999,7 +1077,7 @@ Agent Signature: _______________________`
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-8 flex items-center justify-center gap-4">
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-2 sm:gap-4">
           {[
             { key: 'form', label: t.step1, icon: '📋' },
             { key: 'insurance', label: t.step2, icon: '🛡️' },
@@ -1009,13 +1087,16 @@ Agent Signature: _______________________`
           ].map((s, idx) => {
             const currentIdx = ['form', 'insurance', 'plan', 'contract', 'payment'].indexOf(step)
             return (
-              <div key={s.key} className="flex items-center gap-2">
-                <div className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              <div key={s.key} className="flex items-center gap-1 sm:gap-2">
+                <div className={`rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold ${
                   step === s.key ? 'bg-blue-600 text-white' : currentIdx > idx ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'
                 }`}>
-                  {s.icon} {s.label}
+                  <span className="sm:hidden">{s.icon}</span>
+                  <span className="hidden sm:inline mr-1">{s.icon}</span>
+                  <span className="hidden sm:inline">{s.label}</span>
+                  <span className="sm:hidden">{idx + 1}</span>
                 </div>
-                {idx < 4 && <div className="h-px w-8 bg-gray-300" />}
+                {idx < 4 && <div className="h-px w-4 sm:w-8 bg-gray-300" />}
               </div>
             )
           })}
@@ -1038,7 +1119,7 @@ Agent Signature: _______________________`
             )}
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">{t.firstName} *</label>
                   <input id="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500" required />
@@ -1074,7 +1155,7 @@ Agent Signature: _______________________`
                 <input id="address" type="text" value={formData.address} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500" required />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">{t.city} *</label>
                   <input id="city" type="text" value={formData.city} onChange={handleInputChange} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500" required />
@@ -1102,7 +1183,7 @@ Agent Signature: _______________________`
                 }
                 setStep('insurance')
               }} className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 font-semibold text-white hover:from-blue-700 hover:to-purple-700">
-                {lang === 'es' ? 'Continuar' : 'Continue'}
+                {t.continue}
               </button>
             </div>
           </div>
@@ -1110,14 +1191,14 @@ Agent Signature: _______________________`
 
         {/* Step 2: Insurance Type Selection */}
         {step === 'insurance' && (
-          <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">{t.insuranceType}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {personalInsuranceTypes.map((insurance) => (
                 <button
                   key={insurance.key}
                   onClick={() => handleInsuranceSelect(insurance.key)}
-                  className={`rounded-xl border-2 p-6 text-left transition ${
+                  className={`rounded-xl border-2 p-4 sm:p-6 text-left transition ${
                     selectedInsurance === insurance.key ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
                   }`}
                 >
@@ -1128,7 +1209,7 @@ Agent Signature: _______________________`
               ))}
             </div>
             <button onClick={() => setStep('form')} className="mt-6 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50">
-              {lang === 'es' ? 'Atrás' : 'Back'}
+              {t.back}
             </button>
           </div>
         )}
@@ -1136,11 +1217,11 @@ Agent Signature: _______________________`
         {/* Step 3: Plan Selection */}
         {step === 'plan' && selectedInsurance && (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t.selectPlan}</h2>
               <p className="text-gray-600 mb-6">{personalInsuranceTypes.find(i => i.key === selectedInsurance)?.name[lang]}</p>
               
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {availablePlans.map((plan) => (
                   <button
                     key={plan.id}
@@ -1150,7 +1231,7 @@ Agent Signature: _______________________`
                     }`}
                   >
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name[lang]}</h3>
-                    <p className="text-3xl font-bold text-blue-600 mb-4">${plan.monthlyPrice}<span className="text-sm text-gray-500">/mes</span></p>
+                    <p className="text-3xl font-bold text-blue-600 mb-4">${plan.monthlyPrice}<span className="text-sm text-gray-500">{t.perMonth}</span></p>
                     
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
@@ -1189,10 +1270,108 @@ Agent Signature: _______________________`
                 ))}
               </div>
 
+              {(selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle') && selectedPlan && (
+                <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50/40 p-5 sm:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                      {selectedInsurance === 'personal-auto' ? '🚗' : '🏍️'}
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">{t.vehicleSection}</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="vehicleYear" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleYear} *</label>
+                        <input
+                          id="vehicleYear"
+                          type="number"
+                          min="1900"
+                          max={new Date().getFullYear() + 1}
+                          value={formData.vehicleYear}
+                          onChange={handleInputChange}
+                          placeholder={lang === 'es' ? 'Ej: 2024' : 'e.g. 2024'}
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="vehicleMake" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleMake} *</label>
+                        <input
+                          id="vehicleMake"
+                          type="text"
+                          value={formData.vehicleMake}
+                          onChange={handleInputChange}
+                          placeholder={lang === 'es' ? 'Ej: Toyota' : 'e.g. Toyota'}
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleModel} *</label>
+                        <input
+                          id="vehicleModel"
+                          type="text"
+                          value={formData.vehicleModel}
+                          onChange={handleInputChange}
+                          placeholder={lang === 'es' ? 'Ej: Corolla LE' : 'e.g. Corolla LE'}
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="vehicleVin" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleVin} *</label>
+                        <input
+                          id="vehicleVin"
+                          type="text"
+                          maxLength={17}
+                          value={formData.vehicleVin}
+                          onChange={handleInputChange}
+                          placeholder={lang === 'es' ? '17 caracteres' : '17 characters'}
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 uppercase tracking-wider font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="vehicleLicensePlate" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleLicensePlate} *</label>
+                        <input
+                          id="vehicleLicensePlate"
+                          type="text"
+                          maxLength={10}
+                          value={formData.vehicleLicensePlate}
+                          onChange={handleInputChange}
+                          placeholder={lang === 'es' ? 'Ej: ABC-1234' : 'e.g. ABC-1234'}
+                          className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 uppercase tracking-wider font-mono"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label htmlFor="vehicleDriversCount" className="block text-sm font-medium text-gray-700 mb-2">{t.vehicleDrivers} *</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { value: '1', label: t.vehicleDrivers1, icon: '👤' },
+                            { value: '2', label: t.vehicleDrivers2, icon: '👥' },
+                            { value: '3', label: t.vehicleDrivers3, icon: '👪' },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, vehicleDriversCount: option.value }))}
+                              className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                                formData.vehicleDriversCount === option.value
+                                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              <span className="text-2xl">{option.icon}</span>
+                              <span className="text-xs font-semibold text-gray-800 text-center">{option.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {selectedPlan && (
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <button onClick={() => setStep('insurance')} className="flex-1 rounded-xl border border-gray-300 py-3 px-4 font-semibold text-gray-700 hover:bg-gray-50">
-                    {lang === 'es' ? 'Atrás' : 'Back'}
+                    {t.back}
                   </button>
                   <button onClick={handleGenerateContract} disabled={loading} className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 px-4 font-semibold text-white hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
                     {loading ? t.generating : t.generateContract}
@@ -1205,40 +1384,73 @@ Agent Signature: _______________________`
 
         {/* Step 4: Contract Review and Signature */}
         {step === 'contract' && contractId && (
-          <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">{t.reviewContract}</h2>
             
             <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-sm text-emerald-800">{t.contractGenerated}</p>
             </div>
 
-            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-6">
+            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-5 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.summary}</h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>{t.contractNumber}</span>
-                  <span className="font-mono text-gray-900">{contractId}</span>
+                  <span className="font-mono text-gray-900 break-all ml-2">{contractId}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{t.insuranceTypeLabel}</span>
-                  <span className="font-semibold text-gray-900">{personalInsuranceTypes.find(i => i.key === selectedInsurance)?.name[lang]}</span>
+                  <span className="font-semibold text-gray-900 ml-2">{personalInsuranceTypes.find(i => i.key === selectedInsurance)?.name[lang]}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{t.planLabel}</span>
-                  <span className="font-semibold text-gray-900">{selectedPlan?.name[lang]}</span>
+                  <span className="font-semibold text-gray-900 ml-2">{selectedPlan?.name[lang]}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{t.deductibleLabel}</span>
-                  <span className="font-semibold text-gray-900">${selectedPlan?.deductible}</span>
+                  <span className="font-semibold text-gray-900 ml-2">${selectedPlan?.deductible}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{t.initialPaymentLabel}</span>
-                  <span className="font-semibold text-gray-900">${selectedPlan?.initialPayment}</span>
+                  <span className="font-semibold text-gray-900 ml-2">${selectedPlan?.initialPayment}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>{t.monthlyPaymentLabel}</span>
-                  <span className="font-semibold text-gray-900">${selectedPlan?.monthlyPrice}/mes</span>
+                  <span className="font-semibold text-gray-900 ml-2">${selectedPlan?.monthlyPrice}{t.perMonth}</span>
                 </div>
+                {(selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle') && (
+                  <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+                    <p className="font-semibold text-sm text-blue-900 mb-3">{t.vehicleSection}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleYear}:</span>
+                        <span className="font-semibold text-gray-900 ml-2">{formData.vehicleYear}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleMake}:</span>
+                        <span className="font-semibold text-gray-900 ml-2">{formData.vehicleMake}</span>
+                      </div>
+                      <div className="sm:col-span-2 flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleModel}:</span>
+                        <span className="font-semibold text-gray-900 ml-2">{formData.vehicleModel}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleVin}:</span>
+                        <span className="font-mono font-semibold text-gray-900 ml-2 tracking-wider">{formData.vehicleVin}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleLicensePlate}:</span>
+                        <span className="font-mono font-semibold text-gray-900 ml-2 tracking-wider">{formData.vehicleLicensePlate}</span>
+                      </div>
+                      <div className="sm:col-span-2 flex justify-between text-gray-700">
+                        <span className="text-gray-500">{t.vehicleDrivers}:</span>
+                        <span className="font-semibold text-gray-900 ml-2">
+                          {formData.vehicleDriversCount === '1' ? t.vehicleDrivers1 : formData.vehicleDriversCount === '2' ? t.vehicleDrivers2 : t.vehicleDrivers3}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1287,7 +1499,7 @@ Agent Signature: _______________________`
 
         {/* Step 5: Payment */}
         {step === 'payment' && (
-          <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="rounded-3xl border border-gray-200 bg-white p-4 sm:p-8 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">{t.payment}</h2>
             
             <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -1295,20 +1507,20 @@ Agent Signature: _______________________`
             </div>
 
             {selectedPlan && (
-              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-6">
+              <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-5 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.paymentSummary}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>{t.initialPaymentLabel}</span>
-                    <span className="font-semibold text-gray-900">${selectedPlan.initialPayment}</span>
+                    <span className="font-semibold text-gray-900 ml-2">${selectedPlan.initialPayment}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>{t.monthlyPaymentLabel}</span>
-                    <span className="font-semibold text-gray-900">${selectedPlan.monthlyPrice}/mes</span>
+                    <span className="font-semibold text-gray-900 ml-2">${selectedPlan.monthlyPrice}{t.perMonth}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>{t.deductibleLabel}</span>
-                    <span className="font-semibold text-gray-900">${selectedPlan.deductible}</span>
+                    <span className="font-semibold text-gray-900 ml-2">${selectedPlan.deductible}</span>
                   </div>
                 </div>
               </div>
