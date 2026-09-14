@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import { isServerAdmin } from '@/lib/admin/serverAuth'
 
 export const runtime = 'nodejs'
 
@@ -44,36 +45,7 @@ type AuthUser = {
   ticket_count: number
 }
 
-async function getCurrentUserId(request: Request): Promise<string | null> {
-  if (!SUPABASE_URL || !ANON_KEY) return null
-  const cookieHeader = request.headers.get('cookie') || ''
-  const sb = createClient<Database>(SUPABASE_URL, ANON_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-      persistSession: false,
-    },
-    global: { headers: { Cookie: cookieHeader } },
-  })
-  const { data } = await sb.auth.getUser()
-  return data.user?.id ?? null
-}
 
-async function isAdmin(request: Request): Promise<boolean> {
-  const currentUserId = await getCurrentUserId(request)
-  if (!currentUserId || !SUPABASE_URL || !SERVICE_ROLE_KEY) return false
-  const adminClient = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY)
-  const { data, error } = await adminClient
-    .from('admins')
-    .select('id')
-    .eq('user_id', currentUserId)
-    .maybeSingle()
-  if (error) {
-    console.error('admin/users: admin check failed', error)
-    return false
-  }
-  return Boolean(data)
-}
 
 export async function GET(request: Request) {
   try {
@@ -84,7 +56,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const admin = await isAdmin(request)
+    const admin = await isServerAdmin()
     if (!admin) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized. Admin access required.' },
