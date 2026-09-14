@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 import supabaseAdmin from '@/lib/supabaseAdmin'
@@ -12,7 +12,7 @@ export async function getServerCurrentUser() {
 
   const cookieStore = await cookies()
 
-  const supabase = createServerComponentClient<Database>(SUPABASE_URL, ANON_KEY, {
+  const supabase = createServerClient<Database>(SUPABASE_URL, ANON_KEY, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
