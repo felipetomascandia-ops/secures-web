@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Ticket,
   Users,
+  UserCog,
 } from 'lucide-react'
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { href: '/admin/contracts', label: 'Contracts', icon: FileText },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard },
   { href: '/admin/customers', label: 'Customers', icon: Users },
+  { href: '/admin/users', label: 'Users', icon: UserCog },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
