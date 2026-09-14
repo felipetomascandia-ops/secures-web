@@ -1,29 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Search, Filter, ArrowUpDown, Mail, Phone, Calendar, Shield, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { Search, Filter, ArrowUpDown, Mail, Phone, Calendar, Shield, CheckCircle, XCircle, Clock, Trash2, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 import AdminShell from '@/components/admin/AdminShell'
 import type { Database } from '@/types/supabase'
 
-type AdminRow = Database['public']['Tables']['admins']['Row']
-type UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
 type ContractRow = Database['public']['Tables']['contracts']['Row']
 type TicketRow = Database['public']['Tables']['tickets']['Row']
-
-type SupabaseAuthUser = {
-  id: string
-  email?: string | null
-  phone?: string | null
-  created_at?: string
-  last_sign_in_at?: string | null
-  email_confirmed_at?: string | null
-  phone_confirmed_at?: string | null
-  role?: string | null
-  is_sso_user?: boolean
-  banned_until?: string | null
-  user_metadata?: Record<string, unknown>
-}
+type PaymentRow = Database['public']['Tables']['payments']['Row']
 
 type AuthUser = {
   id: string
@@ -52,128 +36,37 @@ type FilterKey = 'all' | 'confirmed' | 'unconfirmed' | 'admins' | 'active' | 'ba
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AuthUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
   const [sortBy, setSortBy] = useState<'created_at' | 'email' | 'last_sign_in_at'>('created_at')
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
   const [userTickets, setUserTickets] = useState<TicketRow[]>([])
   const [userContracts, setUserContracts] = useState<ContractRow[]>([])
+  const [userPayments, setUserPayments] = useState<PaymentRow[]>([])
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [markingPaymentId, setMarkingPaymentId] = useState<string | null>(null)
 
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true)
+      setLoadError(null)
 
       try {
-        const adminIds = new Set<string>()
-        const { data: adminsData, error: adminsError } = await supabaseAdmin
-          .from('admins')
-          .select('user_id')
+        const res = await fetch('/api/admin/users', { method: 'GET', cache: 'no-store' })
+        const json = await res.json().catch(() => null) as { success?: boolean; users?: AuthUser[]; message?: string } | null
 
-        if (!adminsError && adminsData) {
-          adminsData.forEach((a: AdminRow) => adminIds.add(a.user_id))
+        if (!res.ok || !json || !json.success || !Array.isArray(json.users)) {
+          throw new Error(json?.message || `Failed to load users (HTTP ${res.status})`)
         }
 
-        const profileMap = new Map<string, UserProfileRow>()
-        const { data: profiles, error: profilesError } = await supabaseAdmin
-          .from('user_profiles')
-          .select('*')
-
-        if (!profilesError && profiles) {
-          profiles.forEach((p: UserProfileRow) => {
-            if (p.user_id) profileMap.set(p.user_id, p)
-          })
-        }
-
-        const contractCountMap = new Map<string, number>()
-        const { data: contracts, error: contractsError } = await supabaseAdmin
-          .from('contracts')
-          .select('user_id')
-
-        if (!contractsError && contracts) {
-          contracts.forEach((c: Pick<ContractRow, 'user_id'>) => {
-            if (c.user_id) {
-              contractCountMap.set(c.user_id, (contractCountMap.get(c.user_id) || 0) + 1)
-            }
-          })
-        }
-
-        const ticketCountMap = new Map<string, number>()
-        const { data: tickets, error: ticketsError } = await supabaseAdmin
-          .from('tickets')
-          .select('user_id')
-
-        if (!ticketsError && tickets) {
-          tickets.forEach((t: Pick<TicketRow, 'user_id'>) => {
-            if (t.user_id) {
-              ticketCountMap.set(t.user_id, (ticketCountMap.get(t.user_id) || 0) + 1)
-            }
-          })
-        }
-
-        const allUsers: AuthUser[] = []
-        let page = 1
-        let hasMore = true
-
-        while (hasMore) {
-          const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-            page,
-            perPage: 1000,
-          })
-
-          if (error || !data) {
-            hasMore = false
-            break
-          }
-
-          const authUsers = data.users || []
-
-          authUsers.forEach((user: SupabaseAuthUser) => {
-            const profile = profileMap.get(user.id)
-            const metadata = (user.user_metadata || {}) as Record<string, unknown>
-
-            allUsers.push({
-              id: user.id,
-              email: user.email ?? null,
-              phone: user.phone ?? null,
-              created_at: user.created_at ?? new Date().toISOString(),
-              last_sign_in_at: user.last_sign_in_at ?? null,
-              email_confirmed_at: user.email_confirmed_at ?? null,
-              phone_confirmed_at: user.phone_confirmed_at ?? null,
-              role: user.role ?? null,
-              is_admin: adminIds.has(user.id) || user.role === 'service_role' || user.role === 'supabase_admin',
-              is_sso_user: user.is_sso_user ?? false,
-              banned_until: user.banned_until ?? null,
-              first_name:
-                (typeof metadata.first_name === 'string' ? metadata.first_name : null) ||
-                profile?.first_name ||
-                null,
-              last_name:
-                (typeof metadata.last_name === 'string' ? metadata.last_name : null) ||
-                profile?.last_name ||
-                null,
-              full_name:
-                (typeof metadata.full_name === 'string' ? metadata.full_name : null) ||
-                profile?.full_name ||
-                null,
-              business_name: profile?.business_name || null,
-              address: profile?.address || null,
-              profile_created_at: profile?.created_at || null,
-              contract_count: contractCountMap.get(user.id) || 0,
-              ticket_count: ticketCountMap.get(user.id) || 0,
-            })
-          })
-
-          if (authUsers.length < 1000) {
-            hasMore = false
-          } else {
-            page++
-          }
-        }
-
-        setUsers(allUsers)
+        setUsers(json.users)
       } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error loading users'
         console.error('Error loading users:', err)
+        setLoadError(msg)
         setUsers([])
       } finally {
         setLoading(false)
@@ -188,25 +81,88 @@ export default function AdminUsersPage() {
     setSelectedUser(user)
 
     try {
-      const { data: tickets } = await supabaseAdmin
-        .from('tickets')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(user.id)}`, { method: 'GET', cache: 'no-store' })
+      const json = (await res.json().catch(() => null)) as
+        | { success?: boolean; tickets?: TicketRow[]; contracts?: ContractRow[]; payments?: PaymentRow[]; message?: string }
+        | null
 
-      setUserTickets(tickets || [])
+      if (!res.ok || !json || !json.success) {
+        throw new Error(json?.message || `Failed to load details (HTTP ${res.status})`)
+      }
 
-      const { data: contracts } = await supabaseAdmin
-        .from('contracts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      setUserContracts(contracts || [])
+      setUserTickets(Array.isArray(json.tickets) ? json.tickets : [])
+      setUserContracts(Array.isArray(json.contracts) ? json.contracts : [])
+      setUserPayments(Array.isArray(json.payments) ? json.payments : [])
     } catch (error) {
       console.error('Error loading user details:', error)
+      setUserTickets([])
+      setUserContracts([])
+      setUserPayments([])
     } finally {
       setLoadingDetails(false)
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(selectedUser.id)}`, {
+        method: 'DELETE',
+        cache: 'no-store',
+      })
+      const json = (await res.json().catch(() => null)) as
+        | { success?: boolean; message?: string }
+        | null
+      if (!res.ok || !json || !json.success) {
+        throw new Error(json?.message || `Failed to delete user (HTTP ${res.status})`)
+      }
+      setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id))
+      setConfirmDeleteOpen(false)
+      setSelectedUser(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error deleting user'
+      console.error('Error deleting user:', err)
+      alert(msg)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const markUserPaymentAsPaid = async (paymentId: string) => {
+    if (!window.confirm('Mark this payment as PAID? This will activate the contract and send certificate emails if applicable.')) return
+    setMarkingPaymentId(paymentId)
+    try {
+      const res = await fetch(`/api/admin/payments/${encodeURIComponent(paymentId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const json = (await res.json().catch(() => null)) as
+        | { success?: boolean; message?: string; payment?: PaymentRow }
+        | null
+      if (!res.ok || !json?.success) {
+        alert(json?.message || `Failed to mark payment as paid (HTTP ${res.status})`)
+        return
+      }
+      setUserPayments((prev) =>
+        prev.map((p) => (p.id === paymentId ? { ...p, status: 'paid' } : p))
+      )
+      setUserContracts((prev) =>
+        prev.map((c) => {
+          const updated = json?.payment
+          if (updated && updated.contract_id && c.id === updated.contract_id) {
+            return { ...c, status: 'active', policy_status: 'active' } as ContractRow
+          }
+          return c
+        })
+      )
+    } catch (err) {
+      console.error(err)
+      alert('Unexpected error marking payment as paid.')
+    } finally {
+      setMarkingPaymentId(null)
     }
   }
 
@@ -268,6 +224,29 @@ export default function AdminUsersPage() {
             Review all registered users on the platform, their account status, verification details, and activity.
           </p>
         </div>
+
+        {loadError && (
+          <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-5">
+            <div className="flex items-start gap-3">
+              <XCircle className="mt-0.5 h-5 w-5 text-red-400 shrink-0" />
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-red-300">Failed to load users</h3>
+                <p className="mt-1 text-xs text-red-400/90 whitespace-pre-wrap break-words">{loadError}</p>
+                <button
+                  onClick={() => {
+                    setLoadError(null)
+                    setLoading(true)
+                    // Force a reload of the effect via refresh
+                    window.location.reload()
+                  }}
+                  className="mt-3 inline-flex items-center rounded-lg bg-red-500/20 border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-500/30 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
@@ -551,12 +530,23 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-                >
-                  Close
-                </button>
+                <div className="flex items-center gap-2">
+                  {!selectedUser.is_admin && (
+                    <button
+                      onClick={() => setConfirmDeleteOpen(true)}
+                      className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/20 inline-flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete user
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedUser(null)}
+                    className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
 
               {loadingDetails ? (
@@ -633,35 +623,165 @@ export default function AdminUsersPage() {
                       <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                         Contracts ({userContracts.length})
                       </h4>
+                      {userContracts.length > 0 && (
+                        <div className="flex gap-3 text-xs">
+                          <span className="text-slate-500">
+                            Total premium: <span className="text-white font-semibold">
+                              ${userContracts.reduce((sum, c) => sum + (c.total_premium || 0), 0).toFixed(2)}
+                            </span>
+                          </span>
+                        </div>
+                      )}
                     </div>
                     {userContracts.length === 0 ? (
                       <p className="text-sm text-slate-500">No contracts for this user.</p>
                     ) : (
                       <div className="space-y-2">
-                        {userContracts.map((contract: ContractRow) => (
-                          <div
-                            key={contract.id}
-                            className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
-                          >
-                            <div>
-                              <p className="font-medium text-white">
-                                #{contract.contract_number || contract.id.slice(0, 8)}
-                              </p>
-                              <p className="text-xs text-slate-400">
-                                {contract.insurance_type || 'Insurance'} •{' '}
-                                {contract.status || contract.policy_status || 'No status'}
-                              </p>
+                        {userContracts.map((contract: ContractRow) => {
+                          const status = (contract.policy_status || contract.status || 'draft').toLowerCase()
+                          const statusStyles: Record<string, string> = {
+                            active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            approved: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            paid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                            expired: 'bg-slate-700/60 text-slate-300 border-slate-600/40',
+                            cancelled: 'bg-red-500/15 text-red-400 border-red-500/30',
+                            canceled: 'bg-red-500/15 text-red-400 border-red-500/30',
+                            draft: 'bg-slate-700/60 text-slate-300 border-slate-600/40',
+                          }
+                          const badgeStyle = statusStyles[status] || 'bg-slate-700/60 text-slate-300 border-slate-600/40'
+                          return (
+                            <div
+                              key={contract.id}
+                              className="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-medium text-white">
+                                      #{contract.contract_number || contract.id.slice(0, 8)}
+                                    </p>
+                                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeStyle}`}>
+                                      {status}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    {contract.insurance_type || 'Insurance'}
+                                    {contract.down_payment != null && contract.monthly_payment != null
+                                      ? ` • Down $${contract.down_payment.toFixed(2)} / $${contract.monthly_payment.toFixed(2)} x ${contract.number_of_payments || '?'}`
+                                      : ''}
+                                  </p>
+                                </div>
+                                <div className="text-right flex-none">
+                                  <p className="font-semibold text-white">
+                                    ${contract.total_premium?.toFixed(2) || '—'}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {new Date(contract.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-white">
-                                ${contract.total_premium?.toFixed(2) || '—'}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {new Date(contract.created_at).toLocaleDateString()}
-                              </p>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Payments ({userPayments.length})
+                      </h4>
+                      {userPayments.length > 0 && (
+                        <div className="flex gap-4 text-xs">
+                          <span className="text-emerald-400">
+                            Paid: ${userPayments
+                              .filter((p) => (p.status || '').toLowerCase() === 'paid' || (p.status || '').toLowerCase() === 'completed')
+                              .reduce((sum, p) => sum + (p.amount || 0), 0)
+                              .toFixed(2)}
+                          </span>
+                          <span className="text-slate-500">
+                            Total: ${userPayments.reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {userPayments.length === 0 ? (
+                      <p className="text-sm text-slate-500">No payments recorded for this user.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {userPayments.map((payment: PaymentRow) => {
+                          const pStatus = (payment.status || 'unknown').toLowerCase()
+                          const payStyles: Record<string, string> = {
+                            paid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            completed: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            succeeded: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                            pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                            open: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+                            expired: 'bg-slate-700/60 text-slate-300 border-slate-600/40',
+                            canceled: 'bg-red-500/15 text-red-400 border-red-500/30',
+                            cancelled: 'bg-red-500/15 text-red-400 border-red-500/30',
+                            failed: 'bg-red-500/15 text-red-400 border-red-500/30',
+                            refunded: 'bg-violet-500/15 text-violet-400 border-violet-500/30',
+                          }
+                          const payBadge = payStyles[pStatus] || 'bg-slate-700/60 text-slate-300 border-slate-600/40'
+                          let paymentTitle: string
+                          if (typeof payment.label === 'string' && payment.label.length > 0) {
+                            paymentTitle = payment.label
+                          } else if (typeof payment.description === 'string' && payment.description.length > 0) {
+                            paymentTitle = payment.description
+                          } else if (payment.sequence != null) {
+                            paymentTitle = `Payment #${payment.sequence}`
+                          } else {
+                            paymentTitle = 'Payment'
+                          }
+                          return (
+                            <div
+                              key={payment.id}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-medium text-white truncate">
+                                    {paymentTitle}
+                                  </p>
+                                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${payBadge}`}>
+                                    {pStatus}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-0.5 truncate">
+                                  {payment.customer || payment.email || '—'}
+                                  {payment.due_date ? ` • Due ${new Date(payment.due_date).toLocaleDateString()}` : ''}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-none">
+                                {!['paid', 'completed', 'succeeded'].includes(pStatus) && (
+                                  <button
+                                    onClick={() => markUserPaymentAsPaid(payment.id)}
+                                    disabled={markingPaymentId === payment.id}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-600/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {markingPaymentId === payment.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                    )}
+                                    <span>{markingPaymentId === payment.id ? 'Marking...' : 'Mark Paid'}</span>
+                                  </button>
+                                )}
+                                <div className="text-right">
+                                  <p className="font-semibold text-white">
+                                    ${(payment.amount || 0).toFixed(2)}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {new Date(payment.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     )}
                   </div>
@@ -712,6 +832,45 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {confirmDeleteOpen && selectedUser && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-md rounded-3xl border border-red-500/40 bg-slate-900 p-6 shadow-2xl">
+              <div className="flex items-start gap-4">
+                <div className="rounded-2xl bg-red-500/15 p-3 text-red-400 shrink-0">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xl font-bold text-white">Delete this user?</h3>
+                  <p className="mt-2 text-sm text-slate-400">
+                    You are about to permanently delete{' '}
+                    <span className="font-semibold text-white">
+                      {selectedUser.full_name || selectedUser.email || 'this user'}</span>. This action cannot be undone and will remove their account, profile, and tickets from the auth system.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  disabled={deleting}
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={deleting}
+                  onClick={handleDeleteUser}
+                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {deleting && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  )}
+                  {deleting ? 'Deleting...' : 'Yes, delete user'}
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import PaymentModal from '@/components/PaymentsModal'
 import AdminShell from '@/components/admin/AdminShell'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 
 type Payment = {
   id: string
@@ -23,6 +24,7 @@ export default function AdminPaymentsPage() {
   const [showModal, setShowModal] = useState(false)
   const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null)
+  const [markingPaymentId, setMarkingPaymentId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPayments()
@@ -61,6 +63,32 @@ export default function AdminPaymentsPage() {
       console.error(err)
     } finally {
       setDeletingPaymentId(null)
+    }
+  }
+
+  const markAsPaid = async (paymentId: string) => {
+    if (!window.confirm('Mark this payment as PAID? This will activate the contract and send certificate emails if applicable.')) return
+    setMarkingPaymentId(paymentId)
+    try {
+      const res = await fetch(`/api/admin/payments/${encodeURIComponent(paymentId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const json = await res.json().catch(() => null) as { success?: boolean; message?: string } | null
+      if (!res.ok || !json?.success) {
+        alert(json?.message || `Failed to mark payment as paid (HTTP ${res.status})`)
+        return
+      }
+      setPayments((prev) =>
+        prev.map((p) => (p.id === paymentId ? { ...p, status: 'paid' } : p))
+      )
+    } catch (err) {
+      console.error(err)
+      alert('Unexpected error marking payment as paid.')
+    } finally {
+      setMarkingPaymentId(null)
     }
   }
 
@@ -182,6 +210,20 @@ export default function AdminPaymentsPage() {
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
+                              {!['paid', 'completed', 'succeeded'].includes((payment.status || '').toLowerCase()) && (
+                                <button
+                                  onClick={() => markAsPaid(payment.id)}
+                                  disabled={markingPaymentId === payment.id}
+                                  className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-600/10 px-3 py-2 text-emerald-200 transition hover:bg-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {markingPaymentId === payment.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  )}
+                                  <span>{markingPaymentId === payment.id ? 'Marking...' : 'Mark as Paid'}</span>
+                                </button>
+                              )}
                               <button
                                 onClick={() => deletePayment(payment.id)}
                                 disabled={deletingPaymentId === payment.id}
