@@ -8,7 +8,10 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 export async function getServerCurrentUser() {
-  if (!SUPABASE_URL || !ANON_KEY) return null
+  if (!SUPABASE_URL || !ANON_KEY) {
+    console.log('serverAuth: Missing Supabase URL or ANON Key')
+    return null
+  }
 
   const cookieStore = await cookies()
 
@@ -30,6 +33,9 @@ export async function getServerCurrentUser() {
 
   try {
     const { data } = await supabase.auth.getUser()
+    if (data.user) {
+      console.log('serverAuth: Current user ID:', data.user.id)
+    }
     return data.user ?? null
   } catch (err) {
     console.error('serverAuth: failed to get user from session', err)
@@ -39,7 +45,12 @@ export async function getServerCurrentUser() {
 
 export async function isServerAdmin(): Promise<boolean> {
   const user = await getServerCurrentUser()
-  if (!user) return false
+  if (!user) {
+    console.log('isServerAdmin: No current user found.')
+    return false
+  }
+
+  console.log('isServerAdmin: Checking admin status for user ID:', user.id)
 
   const { data, error } = await supabaseAdmin
     .from('admins')
@@ -52,6 +63,7 @@ export async function isServerAdmin(): Promise<boolean> {
     return false
   }
 
+  console.log('isServerAdmin: Admin check result for user ID', user.id, ':', Boolean(data))
   return Boolean(data)
 }
 
