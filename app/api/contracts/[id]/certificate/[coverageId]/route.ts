@@ -70,7 +70,47 @@ const shell = (title: string, badge: string, body: string): string => `
 // Templates per insurance type
 // ---------------------------------------------------------------------------
 
-function tplPersonalAuto(c: Record<string,unknown>, cov: Record<string,unknown>): string {
+const normalizeDrivers = (src: unknown): Record<string, unknown>[] => {
+  if (Array.isArray(src)) return src as Record<string, unknown>[]
+  if (src && typeof src === 'object') {
+    const obj = src as Record<string, unknown>
+    // sometimes jsonb is stringified on some rows
+    if (typeof obj.drivers === 'string') {
+      try { return normalizeDrivers(JSON.parse(obj.drivers)) } catch { /* ignore */ }
+    }
+  }
+  return []
+}
+
+function buildDriversRows(vehicle: Record<string, unknown> | null, cov: Record<string, unknown>): { rows: string; list: Record<string, unknown>[] } {
+  // Priority: vehicle.drivers (vehicles table) -> coverage.drivers -> coverage.vehicle.drivers
+  let list: Record<string, unknown>[] = normalizeDrivers(vehicle?.drivers ?? null)
+  if (list.length === 0) list = normalizeDrivers(cov.drivers)
+  if (list.length === 0) list = normalizeDrivers((cov.vehicle as Record<string, unknown> | undefined)?.drivers ?? null)
+
+  if (list.length === 0) {
+    const count = vehicle?.drivers_count ?? (cov.vehicle as Record<string, unknown> | undefined)?.drivers_count ?? null
+    if (count) {
+      return { rows: `<tr><td colspan="4" style="text-align:center; color:#64748b;">${count} driver(s) listed on policy</td></tr>`, list: [] }
+    }
+    return { rows: `<tr><td colspan="4" style="text-align:center; color:#64748b;">Primary named insured only</td></tr>`, list: [] }
+  }
+  const rows = list.map((d, i) => {
+    const name = `${str(d.firstName)} ${str(d.lastName)}`.trim()
+    const primary = Boolean(d.isPrimary) || i === 0
+    return `<tr>
+      <td>${i + 1}</td>
+      <td><strong>${name || '—'}</strong>${primary ? '<br><span style="font-size:7.5pt;color:#1e3a8a;text-transform:uppercase;letter-spacing:.08em">Primary Insured</span>' : ''}</td>
+      <td>${str(d.dateOfBirth, '—')}</td>
+      <td style="font-family:monospace">${str(d.license, '—')}</td>
+    </tr>`
+  }).join('')
+  return { rows, list }
+}
+
+function tplPersonalAuto(c: Record<string,unknown>, cov: Record<string,unknown>, vehicles: Record<string,unknown>[]): string {
+  const v = vehicles[0] || null
+  const { rows: driverRows } = buildDriversRows(v, cov)
   return shell('PERSONAL AUTO INSURANCE CERTIFICATE', '🚗 Personal Auto', `
   <div class="notice">
     This certificate confirms that the named insured holds an active personal auto insurance policy
@@ -89,12 +129,25 @@ function tplPersonalAuto(c: Record<string,unknown>, cov: Record<string,unknown>)
     <div class="box"><div class="lbl">Deductible</div><div class="val">${fmt(cov.deductible)}</div></div>
     <div class="box"><div class="lbl">Contract #</div><div class="val">${str(c.contract_number)}</div></div>
   </div>
+  ${v ? `<div class="section-title">Insured Vehicle</div>
+  <div class="grid3">
+    <div class="box"><div class="lbl">Year / Make / Model</div><div class="val">${str(v.year)} ${str(v.make)} ${str(v.model)}</div></div>
+    <div class="box"><div class="lbl">License Plate</div><div class="val" style="font-family:monospace; letter-spacing:.06em;">${str(v.license_plate, '—')}</div></div>
+    <div class="box"><div class="lbl">VIN</div><div class="val" style="font-family:monospace; letter-spacing:.06em; font-size:9pt;">${str(v.vin, '—')}</div></div>
+  </div>` : ''}
+  <div class="section-title">Listed Drivers</div>
+  <table>
+    <thead><tr><th style="width:6%">#</th><th>Driver Name</th><th style="width:22%">Date of Birth</th><th style="width:22%">License #</th></tr></thead>
+    <tbody>${driverRows}</tbody>
+  </table>
   <div class="section-title">Coverage Details</div>
   <div class="notice">${str(cov.coverage_details,'Liability, collision and comprehensive coverage as per policy terms.')}</div>
   <div class="sig-line">Authorized Representative – Olimpo Coverage Group</div>`)
 }
 
-function tplMotorcycle(c: Record<string,unknown>, cov: Record<string,unknown>): string {
+function tplMotorcycle(c: Record<string,unknown>, cov: Record<string,unknown>, vehicles: Record<string,unknown>[]): string {
+  const v = vehicles[0] || null
+  const { rows: driverRows } = buildDriversRows(v, cov)
   return shell('MOTORCYCLE INSURANCE CERTIFICATE', '🏍️ Motorcycle', `
   <div class="notice">
     This certificate confirms active motorcycle insurance coverage issued by Olimpo Coverage Group
@@ -112,6 +165,17 @@ function tplMotorcycle(c: Record<string,unknown>, cov: Record<string,unknown>): 
     <div class="box"><div class="lbl">Deductible</div><div class="val">${fmt(cov.deductible)}</div></div>
     <div class="box"><div class="lbl">Contract #</div><div class="val">${str(c.contract_number)}</div></div>
   </div>
+  ${v ? `<div class="section-title">Insured Motorcycle</div>
+  <div class="grid3">
+    <div class="box"><div class="lbl">Year / Make / Model</div><div class="val">${str(v.year)} ${str(v.make)} ${str(v.model)}</div></div>
+    <div class="box"><div class="lbl">License Plate</div><div class="val" style="font-family:monospace; letter-spacing:.06em;">${str(v.license_plate, '—')}</div></div>
+    <div class="box"><div class="lbl">VIN</div><div class="val" style="font-family:monospace; letter-spacing:.06em; font-size:9pt;">${str(v.vin, '—')}</div></div>
+  </div>` : ''}
+  <div class="section-title">Listed Drivers</div>
+  <table>
+    <thead><tr><th style="width:6%">#</th><th>Driver Name</th><th style="width:22%">Date of Birth</th><th style="width:22%">License #</th></tr></thead>
+    <tbody>${driverRows}</tbody>
+  </table>
   <div class="section-title">Coverage Details</div>
   <div class="notice">${str(cov.coverage_details,'Liability, collision and comprehensive coverage for the insured motorcycle.')}</div>
   <div class="sig-line">Authorized Representative – Olimpo Coverage Group</div>`)
@@ -349,10 +413,10 @@ export async function GET(
 
     switch (insType) {
       case 'personal-auto':
-        html = tplPersonalAuto(contract, coverage)
+        html = tplPersonalAuto(contract, coverage, vList)
         break
       case 'motorcycle':
-        html = tplMotorcycle(contract, coverage)
+        html = tplMotorcycle(contract, coverage, vList)
         break
       case 'pet':
         html = tplPet(contract, coverage)

@@ -459,6 +459,15 @@ const translations: Record<Language, {
   vehicleDrivers1: string
   vehicleDrivers2: string
   vehicleDrivers3: string
+  driversList: string
+  driverName: string
+  driverLastName: string
+  driverDOB: string
+  driverLicense: string
+  driverIsYou: string
+  addDriver: string
+  removeDriver: string
+  fillDrivers: string
   vehicleRequired: string
   perMonth: string
   continue: string
@@ -525,6 +534,15 @@ const translations: Record<Language, {
     vehicleDrivers1: '1 Driver (Only you)',
     vehicleDrivers2: '2 Drivers',
     vehicleDrivers3: '3 or more Drivers',
+    driversList: 'Additional Drivers',
+    driverName: 'First Name',
+    driverLastName: 'Last Name',
+    driverDOB: 'Date of Birth',
+    driverLicense: 'Driver License #',
+    driverIsYou: 'Primary Insured (You)',
+    addDriver: '+ Add Another Driver',
+    removeDriver: 'Remove',
+    fillDrivers: 'Please complete every required field for each driver.',
     vehicleRequired: 'Please fill all required vehicle information.',
     perMonth: '/mo',
     continue: 'Continue',
@@ -591,6 +609,15 @@ const translations: Record<Language, {
     vehicleDrivers1: '1 Conductor (Solo tú)',
     vehicleDrivers2: '2 Conductores',
     vehicleDrivers3: '3 o más Conductores',
+    driversList: 'Conductores Adicionales',
+    driverName: 'Nombre',
+    driverLastName: 'Apellido',
+    driverDOB: 'Fecha de Nacimiento',
+    driverLicense: 'N° de Licencia',
+    driverIsYou: 'Asegurado Principal (Tú)',
+    addDriver: '+ Añadir Otro Conductor',
+    removeDriver: 'Eliminar',
+    fillDrivers: 'Por favor completa todos los campos obligatorios de cada conductor.',
     vehicleRequired: 'Por favor completa todos los datos obligatorios del vehículo.',
     perMonth: '/mes',
     continue: 'Continuar',
@@ -630,7 +657,30 @@ export default function PersonalInsurancePage() {
     vehicleVin: '',
     vehicleLicensePlate: '',
     vehicleDriversCount: '1',
+    drivers: [{ firstName: '', lastName: '', dateOfBirth: '', license: '' }],
   })
+
+  const ensureDriverSlots = (count: number) => {
+    setFormData(prev => {
+      const current = prev.drivers || []
+      const primaryPrefill = {
+        firstName: prev.firstName,
+        lastName: prev.lastName,
+        dateOfBirth: prev.dateOfBirth,
+        license: '',
+      }
+      if (current.length === 0) {
+        const newDrivers: typeof current = [{ ...primaryPrefill }]
+        for (let i = 1; i < count; i++) newDrivers.push({ firstName: '', lastName: '', dateOfBirth: '', license: '' })
+        return { ...prev, drivers: newDrivers }
+      }
+      const withPrimary = current.map((d, i) => i === 0 ? { ...primaryPrefill } : d)
+      while (withPrimary.length < count) {
+        withPrimary.push({ firstName: '', lastName: '', dateOfBirth: '', license: '' })
+      }
+      return { ...prev, drivers: withPrimary.slice(0, Math.max(count, withPrimary.length)) }
+    })
+  }
 
   useEffect(() => {
     if (user?.email) {
@@ -640,6 +690,65 @@ export default function PersonalInsurancePage() {
       }))
     }
   }, [user])
+
+  useEffect(() => {
+    const n = Math.max(1, Number(formData.vehicleDriversCount) || 1)
+    const current = formData.drivers || []
+    if (current.length < n) {
+      ensureDriverSlots(n)
+    }
+  }, [formData.vehicleDriversCount, formData.drivers])
+
+  useEffect(() => {
+    if (formData.firstName || formData.lastName || formData.dateOfBirth) {
+      setFormData(prev => {
+        const drivers = prev.drivers || []
+        if (drivers.length === 0) return prev
+        const primary = drivers[0]
+        if (
+          primary.firstName === prev.firstName &&
+          primary.lastName === prev.lastName &&
+          primary.dateOfBirth === prev.dateOfBirth
+        ) return prev
+        const next = [...drivers]
+        next[0] = {
+          ...next[0],
+          firstName: prev.firstName,
+          lastName: prev.lastName,
+          dateOfBirth: prev.dateOfBirth,
+        }
+        return { ...prev, drivers: next }
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.firstName, formData.lastName, formData.dateOfBirth])
+
+  const handleDriverChange = (index: number, field: string, value: string) => {
+    if (index === 0 && (field === 'firstName' || field === 'lastName' || field === 'dateOfBirth')) {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
+    setFormData(prev => {
+      const next = [...(prev.drivers || [])]
+      if (!next[index]) next[index] = { firstName: '', lastName: '', dateOfBirth: '', license: '' }
+      next[index] = { ...next[index], [field]: value }
+      return { ...prev, drivers: next }
+    })
+  }
+
+  const addDriver = () => {
+    setFormData(prev => {
+      const next = [...(prev.drivers || []), { firstName: '', lastName: '', dateOfBirth: '', license: '' }]
+      return { ...prev, drivers: next, vehicleDriversCount: String(next.length) }
+    })
+  }
+
+  const removeDriver = (index: number) => {
+    setFormData(prev => {
+      if ((prev.drivers || []).length <= 1) return prev
+      const next = (prev.drivers || []).filter((_, i) => i !== index)
+      return { ...prev, drivers: next, vehicleDriversCount: String(next.length) }
+    })
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -685,12 +794,34 @@ export default function PersonalInsurancePage() {
           setLoading(false)
           return
         }
+        const drivers = formData.drivers || []
+        const invalidDrivers = drivers.some((d, i) => {
+          if (i === 0) return false
+          return !d.firstName?.trim() || !d.lastName?.trim() || !d.dateOfBirth
+        })
+        if (invalidDrivers) {
+          alert(t.fillDrivers)
+          setLoading(false)
+          return
+        }
       }
 
       const plan = selectedPlan
 
+      const driversForContract = (formData.drivers || []).map((d, i) => ({
+        firstName: d.firstName,
+        lastName: d.lastName,
+        dateOfBirth: d.dateOfBirth,
+        license: d.license || '',
+        isPrimary: i === 0,
+      }))
+
+      const driversSummary = driversForContract
+        .map((d, i) => `[${i + 1}] ${d.firstName} ${d.lastName}${d.license ? ` (Lic: ${d.license})` : ''}`)
+        .join(' · ')
+
       const vehicleDetails = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle')
-        ? ` | Vehicle: ${formData.vehicleYear} ${formData.vehicleMake} ${formData.vehicleModel} | VIN: ${formData.vehicleVin} | License Plate: ${formData.vehicleLicensePlate} | Drivers: ${formData.vehicleDriversCount}`
+        ? ` | Vehicle: ${formData.vehicleYear} ${formData.vehicleMake} ${formData.vehicleModel} | VIN: ${formData.vehicleVin} | License Plate: ${formData.vehicleLicensePlate} | Drivers (${driversForContract.length}): ${driversSummary}`
         : ''
 
       const vehicleMetadata = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle')
@@ -701,11 +832,12 @@ export default function PersonalInsurancePage() {
             vin: formData.vehicleVin,
             licensePlate: formData.vehicleLicensePlate,
             driversCount: Number(formData.vehicleDriversCount),
+            drivers: driversForContract,
           }
         : undefined
 
       const vehiclesArray = (selectedInsurance === 'personal-auto' || selectedInsurance === 'motorcycle' && vehicleMetadata)
-        ? [{ ...vehicleMetadata, license_plate: formData.vehicleLicensePlate, drivers_count: Number(formData.vehicleDriversCount) }]
+        ? [{ ...vehicleMetadata, license_plate: formData.vehicleLicensePlate, drivers_count: Number(formData.vehicleDriversCount), drivers: driversForContract }]
         : []
 
       const selectedCoverages = [{
@@ -719,6 +851,7 @@ export default function PersonalInsurancePage() {
         coverageDetails: plan.coverages.map((c: { en: string }) => c.en).join(', ') + vehicleDetails,
         vehicle: vehicleMetadata,
         licensePlate: formData.vehicleLicensePlate,
+        drivers: driversForContract,
       }]
 
       console.log('Creating contract with coverages:', selectedCoverages)
@@ -1352,9 +1485,11 @@ Agent Signature: _______________________`
                               type="button"
                               onClick={() => setFormData(prev => ({ ...prev, vehicleDriversCount: option.value }))}
                               className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
-                                formData.vehicleDriversCount === option.value
+                                Number(formData.vehicleDriversCount) === Number(option.value)
                                   ? 'border-blue-500 bg-blue-50 shadow-md'
-                                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                  : Number(formData.vehicleDriversCount) > 3 && option.value === '3'
+                                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                               }`}
                             >
                               <span className="text-2xl">{option.icon}</span>
@@ -1362,6 +1497,86 @@ Agent Signature: _______________________`
                             </button>
                           ))}
                         </div>
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-3 mt-2">
+                        <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                          <span>👥</span> {t.driversList}
+                        </h4>
+                        {(formData.drivers || []).map((driver, idx) => (
+                          <div key={idx} className={`rounded-xl border-2 p-4 transition-colors ${idx === 0 ? 'border-blue-200 bg-blue-50/40' : 'border-gray-200 bg-gray-50/40'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${idx === 0 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>{idx + 1}</span>
+                                {idx === 0 ? (
+                                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wide bg-blue-100 px-2.5 py-1 rounded-full">{t.driverIsYou}</span>
+                                ) : (
+                                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Driver #{idx + 1}</span>
+                                )}
+                              </div>
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeDriver(idx)}
+                                  className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg transition-colors"
+                                >
+                                  ✕ {t.removeDriver}
+                                </button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t.driverName} *</label>
+                                <input
+                                  type="text"
+                                  value={driver.firstName || ''}
+                                  onChange={(e) => handleDriverChange(idx, 'firstName', e.target.value)}
+                                  placeholder={idx === 0 ? t.firstName : ''}
+                                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 disabled:bg-blue-100 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                  disabled={idx === 0}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t.driverLastName} *</label>
+                                <input
+                                  type="text"
+                                  value={driver.lastName || ''}
+                                  onChange={(e) => handleDriverChange(idx, 'lastName', e.target.value)}
+                                  placeholder={idx === 0 ? t.lastName : ''}
+                                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 disabled:bg-blue-100 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                  disabled={idx === 0}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t.driverDOB} *</label>
+                                <input
+                                  type="date"
+                                  value={driver.dateOfBirth || ''}
+                                  onChange={(e) => handleDriverChange(idx, 'dateOfBirth', e.target.value)}
+                                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 disabled:bg-blue-100 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                  disabled={idx === 0}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t.driverLicense} <span className="font-normal text-gray-400">({t.optional})</span></label>
+                                <input
+                                  type="text"
+                                  value={driver.license || ''}
+                                  onChange={(e) => handleDriverChange(idx, 'license', e.target.value)}
+                                  maxLength={20}
+                                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 uppercase font-mono tracking-wider"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addDriver}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-500 font-semibold text-sm transition-all"
+                        >
+                          ➕ {t.addDriver}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1445,8 +1660,28 @@ Agent Signature: _______________________`
                       <div className="sm:col-span-2 flex justify-between text-gray-700">
                         <span className="text-gray-500">{t.vehicleDrivers}:</span>
                         <span className="font-semibold text-gray-900 ml-2">
-                          {formData.vehicleDriversCount === '1' ? t.vehicleDrivers1 : formData.vehicleDriversCount === '2' ? t.vehicleDrivers2 : t.vehicleDrivers3}
+                          {Number(formData.vehicleDriversCount) === 1 ? t.vehicleDrivers1 : Number(formData.vehicleDriversCount) === 2 ? t.vehicleDrivers2 : t.vehicleDrivers3}
                         </span>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <div className="text-gray-500 mb-2 text-sm font-medium">{t.driversList}:</div>
+                        <div className="space-y-2">
+                          {(formData.drivers || []).map((d, i) => (
+                            <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${i === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                              <span className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shrink-0 ${i === 0 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>{i + 1}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-semibold text-gray-900 truncate">
+                                  {d.firstName} {d.lastName}
+                                  {i === 0 && <span className="ml-2 text-[10px] font-bold uppercase text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full align-middle">{t.driverIsYou}</span>}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {d.dateOfBirth || '—'}
+                                  {d.license ? ` · Lic: ${d.license}` : ''}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

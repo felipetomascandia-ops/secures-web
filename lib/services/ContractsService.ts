@@ -384,14 +384,18 @@ export class ContractsService {
     // Insert vehicles
     const createdVehicles: any[] = []
     for (const vehicle of vehicles) {
+      const v = vehicle as Record<string, unknown>
+      const rawDrivers = v.drivers
+      const driverList: unknown[] | null = Array.isArray(rawDrivers) ? rawDrivers : null
       const vehiclePayload: Record<string, unknown> = {
         contract_id: contractId,
-        year: vehicle.year ?? vehicle.vehicleYear ?? null,
-        make: vehicle.make ?? vehicle.vehicleMake ?? null,
-        model: vehicle.model ?? vehicle.vehicleModel ?? null,
-        vin: vehicle.vin ?? vehicle.vehicleVin ?? null,
-        license_plate: vehicle.license_plate ?? vehicle.licensePlate ?? vehicle.vehicleLicensePlate ?? null,
-        drivers_count: vehicle.drivers_count ?? vehicle.driversCount ?? vehicle.vehicleDriversCount ?? null,
+        year: v.year ?? v.vehicleYear ?? null,
+        make: v.make ?? v.vehicleMake ?? null,
+        model: v.model ?? v.vehicleModel ?? null,
+        vin: v.vin ?? v.vehicleVin ?? null,
+        license_plate: v.license_plate ?? v.licensePlate ?? v.vehicleLicensePlate ?? null,
+        drivers_count: v.drivers_count ?? v.driversCount ?? v.vehicleDriversCount ?? (driverList ? driverList.length : null),
+        drivers: driverList,
       }
       const { data: vehData, error: vehError } = await (db as unknown as any).from('vehicles').insert(vehiclePayload).select().single()
       if (!vehError && vehData) {

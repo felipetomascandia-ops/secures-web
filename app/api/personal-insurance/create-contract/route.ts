@@ -79,16 +79,32 @@ export async function POST(req: Request) {
           const v = (cov as Record<string, unknown>).vehicle
           if (v && typeof v === 'object') {
             const veh = v as Record<string, unknown>
+            const covAsRecord = cov as Record<string, unknown>
+            const driversFromCoverage = Array.isArray(covAsRecord.drivers)
+              ? covAsRecord.drivers
+              : Array.isArray(veh.drivers) ? veh.drivers : undefined
             const vehicleRecord: Record<string, unknown> = {
               year: veh.year ?? veh.vehicleYear ?? null,
               make: veh.make ?? veh.vehicleMake ?? null,
               model: veh.model ?? veh.vehicleModel ?? null,
               vin: veh.vin ?? veh.vehicleVin ?? null,
-              license_plate: veh.license_plate ?? veh.licensePlate ?? veh.vehicleLicensePlate ?? (cov as Record<string, unknown>).licensePlate ?? null,
-              drivers_count: veh.drivers_count ?? veh.driversCount ?? veh.vehicleDriversCount ?? null,
+              license_plate: veh.license_plate ?? veh.licensePlate ?? veh.vehicleLicensePlate ?? covAsRecord.licensePlate ?? null,
+              drivers_count: veh.drivers_count ?? veh.driversCount ?? veh.vehicleDriversCount ?? (Array.isArray(driversFromCoverage) ? driversFromCoverage.length : null),
+              drivers: driversFromCoverage ?? null,
             }
             if (vehicleRecord.year || vehicleRecord.make || vehicleRecord.vin) {
               vehicles.push(vehicleRecord)
+            }
+          }
+        }
+      } else if (vehicles.length > 0) {
+        // Ensure every vehicle carries a drivers list (merged from coverage.drivers when available)
+        const coverageDrivers = (coverages[0] as Record<string, unknown> | undefined)?.drivers
+        if (coverageDrivers && Array.isArray(coverageDrivers) && coverageDrivers.length > 0) {
+          for (let i = 0; i < vehicles.length; i++) {
+            const v = vehicles[i] as Record<string, unknown>
+            if (!v.drivers || !(Array.isArray(v.drivers) && v.drivers.length > 0)) {
+              v.drivers = coverageDrivers
             }
           }
         }
@@ -109,6 +125,17 @@ export async function POST(req: Request) {
           const plateMarkerAlt = 'Plate:'
           if (!coverageDetails.includes(plateMarker) && !coverageDetails.includes(plateMarkerAlt)) {
             coverageDetails = `${coverageDetails} | License Plate: ${licensePlate}`
+          }
+        }
+
+        const drivers = Array.isArray(cov.drivers)
+          ? cov.drivers as Record<string, unknown>[]
+          : ((cov.vehicle as Record<string, unknown> | undefined)?.drivers as Record<string, unknown>[] | undefined)
+        if (drivers && drivers.length > 0) {
+          const driversTag = `Drivers (${drivers.length})`
+          if (!coverageDetails.includes(driversTag)) {
+            const driverLines = drivers.map((d: Record<string, unknown>, i: number) => `[${i + 1}] ${d.firstName} ${d.lastName}${d.license ? ` (Lic: ${d.license})` : ''}`).join(' · ')
+            coverageDetails = `${coverageDetails} | ${driversTag}: ${driverLines}`
           }
         }
 
