@@ -4,6 +4,26 @@ import { useEffect, useMemo, useState } from 'react'
 import { Search, Filter, ArrowUpDown, Mail, Phone, Calendar, Shield, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import AdminShell from '@/components/admin/AdminShell'
+import type { Database } from '@/types/supabase'
+
+type AdminRow = Database['public']['Tables']['admins']['Row']
+type UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
+type ContractRow = Database['public']['Tables']['contracts']['Row']
+type TicketRow = Database['public']['Tables']['tickets']['Row']
+
+type SupabaseAuthUser = {
+  id: string
+  email?: string | null
+  phone?: string | null
+  created_at?: string
+  last_sign_in_at?: string | null
+  email_confirmed_at?: string | null
+  phone_confirmed_at?: string | null
+  role?: string | null
+  is_sso_user?: boolean
+  banned_until?: string | null
+  user_metadata?: Record<string, unknown>
+}
 
 type AuthUser = {
   id: string
@@ -36,8 +56,8 @@ export default function AdminUsersPage() {
   const [filter, setFilter] = useState<FilterKey>('all')
   const [sortBy, setSortBy] = useState<'created_at' | 'email' | 'last_sign_in_at'>('created_at')
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
-  const [userTickets, setUserTickets] = useState<any[]>([])
-  const [userContracts, setUserContracts] = useState<any[]>([])
+  const [userTickets, setUserTickets] = useState<TicketRow[]>([])
+  const [userContracts, setUserContracts] = useState<ContractRow[]>([])
   const [loadingDetails, setLoadingDetails] = useState(false)
 
   useEffect(() => {
@@ -51,16 +71,16 @@ export default function AdminUsersPage() {
           .select('user_id')
 
         if (!adminsError && adminsData) {
-          adminsData.forEach((a: any) => adminIds.add(a.user_id))
+          adminsData.forEach((a: AdminRow) => adminIds.add(a.user_id))
         }
 
-        const profileMap = new Map<string, any>()
+        const profileMap = new Map<string, UserProfileRow>()
         const { data: profiles, error: profilesError } = await supabaseAdmin
           .from('user_profiles')
           .select('*')
 
         if (!profilesError && profiles) {
-          profiles.forEach((p: any) => {
+          profiles.forEach((p: UserProfileRow) => {
             if (p.user_id) profileMap.set(p.user_id, p)
           })
         }
@@ -71,7 +91,7 @@ export default function AdminUsersPage() {
           .select('user_id')
 
         if (!contractsError && contracts) {
-          contracts.forEach((c: any) => {
+          contracts.forEach((c: Pick<ContractRow, 'user_id'>) => {
             if (c.user_id) {
               contractCountMap.set(c.user_id, (contractCountMap.get(c.user_id) || 0) + 1)
             }
@@ -84,7 +104,7 @@ export default function AdminUsersPage() {
           .select('user_id')
 
         if (!ticketsError && tickets) {
-          tickets.forEach((t: any) => {
+          tickets.forEach((t: Pick<TicketRow, 'user_id'>) => {
             if (t.user_id) {
               ticketCountMap.set(t.user_id, (ticketCountMap.get(t.user_id) || 0) + 1)
             }
@@ -108,7 +128,7 @@ export default function AdminUsersPage() {
 
           const authUsers = data.users || []
 
-          authUsers.forEach((user: any) => {
+          authUsers.forEach((user: SupabaseAuthUser) => {
             const profile = profileMap.get(user.id)
             const metadata = (user.user_metadata || {}) as Record<string, unknown>
 
@@ -618,7 +638,7 @@ export default function AdminUsersPage() {
                       <p className="text-sm text-slate-500">No contracts for this user.</p>
                     ) : (
                       <div className="space-y-2">
-                        {userContracts.map((contract: any) => (
+                        {userContracts.map((contract: ContractRow) => (
                           <div
                             key={contract.id}
                             className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
@@ -656,7 +676,7 @@ export default function AdminUsersPage() {
                       <p className="text-sm text-slate-500">No support tickets for this user.</p>
                     ) : (
                       <div className="space-y-2">
-                        {userTickets.map((ticket: any) => (
+                        {userTickets.map((ticket: TicketRow) => (
                           <div
                             key={ticket.id}
                             className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
